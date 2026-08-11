@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-11T00:00:00+08:00",
+  "title": "Design System: 狠狠学",
+  "extensions": {
+    "colorMeta": {
+      "ink": { "role": "primary", "displayName": "Ink", "canonical": "#0a0a0b", "tonalRamp": ["#0a0a0b", "#27272a", "#454549", "#626267", "#808085", "#9d9da2", "#bbbbbf", "#f4f4f6"] },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "#ffffff", "tonalRamp": ["#313133", "#58585c", "#7e7e83", "#a5a5aa", "#cbcbce", "#e1e1e3", "#f0f0f1", "#ffffff"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headline only." },
+      "body": { "displayName": "Body", "purpose": "Explanatory copy and dialog text." },
+      "label": { "displayName": "Label", "purpose": "Navigation, metadata, and chips." }
+    },
+    "shadows": [
+      { "name": "menu-float", "value": "0 18px 44px rgba(0,0,0,0.14)", "purpose": "Temporary menu layer." },
+      { "name": "dialog-float", "value": "0 20px 60px rgba(0,0,0,0.22)", "purpose": "Modal focus layer." }
+    ],
+    "motion": [
+      { "name": "entrance-ease", "value": "[0.16, 1, 0.3, 1]", "purpose": "Hero entrance and panel transitions." },
+      { "name": "micro-hover", "value": "180ms ease", "purpose": "Button and chip hover feedback." }
+    ],
+    "breakpoints": [
+      { "name": "desktop", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The clear action used for the hero and dialog confirmation.",
+      "html": "<button class=\"ds-primary\">探索功能</button>",
+      "css": ".ds-primary { min-height: 38px; padding: 0 15px; border: 1px solid #0a0a0b; border-radius: 999px; background: #0a0a0b; color: #fff; font: 500 13px Inter, Arial, sans-serif; cursor: pointer; transition: transform 180ms ease; } .ds-primary:hover { transform: translateY(-2px); } .ds-primary:focus-visible { outline: 2px solid #0a0a0b; outline-offset: 3px; }"
+    },
+    {
+      "name": "Topic Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "A compact filter or module entry placed against the video stage.",
+      "html": "<button class=\"ds-chip\">知识树</button>",
+      "css": ".ds-chip { min-height: 27px; padding: 0 10px; border: 1px solid rgba(0,0,0,0.12); border-radius: 999px; background: rgba(255,255,255,0.86); color: #343438; font: 500 11px Inter, Arial, sans-serif; cursor: pointer; } .ds-chip:hover { background: #fff; } .ds-chip:focus-visible { outline: 2px solid #0a0a0b; outline-offset: 3px; }"
+    },
+    {
+      "name": "Icon Circle",
+      "kind": "custom",
+      "refersTo": "navigation-icon",
+      "description": "A circular black icon holder for compact navigation commands.",
+      "html": "<button class=\"ds-icon\" aria-label=\"打开学习中枢\"><svg viewBox=\"0 0 16 16\" aria-hidden=\"true\"><circle cx=\"3.25\" cy=\"3.25\" r=\"1.45\"/><circle cx=\"8.75\" cy=\"3.25\" r=\"1.45\"/><circle cx=\"3.25\" cy=\"8.75\" r=\"1.45\"/><circle cx=\"8.75\" cy=\"8.75\" r=\"1.45\"/></svg></button>",
+      "css": ".ds-icon { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: 50%; background: #0a0a0b; color: #fff; cursor: pointer; } .ds-icon svg { width: 14px; height: 14px; fill: currentColor; } .ds-icon:focus-visible { outline: 2px solid #0a0a0b; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Learning Aperture",
+    "overview": "狠狠学以全屏视频作为学习开始时的视觉证据，界面其余部分退到近黑、纸白与细边线。视频是页面唯一承载质感的媒介，文字与动作在白色渐隐带中保持直接和可读。",
+    "keyCharacteristics": ["视频主导，界面克制。", "近黑和纸白承担全部层级。", "大号轻字重标题与紧凑标签形成尺度对比。", "交互只在明确入口、菜单和对话框上出现。"],
+    "rules": [{ "name": "The One-Medium Rule", "body": "首屏只有视频承担视觉质感；不可用彩色渐变、图案或带材质的 CSS 替代它。", "section": "colors" }],
+    "dos": ["Do 把真实视频作为首屏的主媒介，保持前景控件极少。", "Do 在移动端先保证标题、操作、标签与固定 AI 标注互不遮挡。", "Do 让每一个图标动作都有对应的 aria 名称和焦点态。"],
+    "donts": ["Don't 在着陆页引入渐变文字、数据指标、卡片网格或技术风格的背景纹理。", "Don't 使用除灰阶以外的主题色来争夺视频和主标题的注意力。", "Don't 以隐藏文字替代无障碍名称。"]
+  }
+}
