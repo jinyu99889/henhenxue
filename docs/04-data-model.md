@@ -43,18 +43,19 @@
 
 | 表 | 核心字段 | 约束/索引 | 说明 |
 | --- | --- | --- | --- |
-| `learn_tree` | `id, owner_user_id, default_credential_id, title, original_question, language, current_version_id, root_tree_id, source_node_key, status` | `idx(owner_user_id, updated_at)`, `idx(root_tree_id)` | 一棵学习树；保存后续追问/扩展的默认模型凭据，从节点建新树以 `root_tree_id/source_node_key` 溯源。 |
+| `learn_tree` | `id, owner_user_id, default_credential_id, title, original_question, language, current_version_id, root_tree_id, source_node_key, status` | `idx(owner_user_id, updated_at)`, `idx(root_tree_id)` | 一棵学习树；保存首次生成和后续叶子追问的默认模型凭据，未来从节点建新树可用 `root_tree_id/source_node_key` 溯源。 |
 | `learn_tree_version` | `id, tree_id, version_no, parent_version_id, generation_type, source_node_key, source_task_id, markdown_file_id, checksum, node_count, max_depth, status` | `uk(tree_id, version_no)`, `idx(tree_id, created_at)` | 不可变快照；`generation_type` 如 `INITIAL`、`EXPAND`、`MANUAL_EDIT`。 |
-| `learn_node` | `id, tree_version_id, node_key, parent_node_key, depth, sort_order, title, content_md, summary, source_type, source_message_id` | `uk(tree_version_id, node_key)`, `idx(tree_version_id, parent_node_key, sort_order)`, `idx(tree_version_id, depth)` | 一个版本内的树节点。`parent_node_key` 为 null 的唯一根由应用校验。 |
-| `learn_conversation` | `id, tree_id, owner_user_id, base_version_id, node_key, title, status` | `idx(tree_id, node_key, created_at)`, `idx(owner_user_id, updated_at)` | 围绕指定节点的追问会话。 |
+| `learn_node` | `id, tree_version_id, node_key, parent_node_key, depth, sort_order, title, content_md, summary, source_type, source_message_id` | `uk(tree_version_id, node_key)`, `idx(tree_version_id, parent_node_key, sort_order)`, `idx(tree_version_id, depth)` | 一个版本内的树节点。`parent_node_key` 为 null 的唯一根由应用校验。`content_md` 仅保存该标题直属正文，不重复保存任何子标题或后代正文。 |
+| `learn_conversation` | `id, tree_id, owner_user_id, base_version_id, node_key, title, status` | `idx(tree_id, node_key, created_at)`, `idx(owner_user_id, updated_at)` | 围绕指定版本中叶子节点的追问会话。 |
 | `learn_message` | `id, conversation_id, seq_no, role, content_md, context_json, ai_task_id, token_in, token_out, status` | `uk(conversation_id, seq_no)`, `idx(ai_task_id)` | 用户和 AI 消息；`context_json` 记录当次裁剪后的上下文来源。 |
 
 关键完整性规则：
 
 1. `learn_tree.current_version_id` 必须属于该树且状态为 `READY`。
 2. 一个 `learn_tree_version` 恰有一个根节点，所有 `parent_node_key` 均在同版本存在。
-3. 扩展版本复制原版本节点，保留节点 `node_key`；新增节点的父节点必须是用户指定的 `source_node_key`。
-4. `learn_conversation.base_version_id` 和 `node_key` 必须能定位该版本节点；树版本回退不删除对话。
+3. 每个节点的直属正文不包含任何后代内容。根和非叶子节点的展示 Markdown 由服务端递归读取有序后代得到，不落冗余列。
+4. `learn_conversation.base_version_id` 和 `node_key` 必须能定位该版本中的叶子节点；树版本回退不删除对话，也不得将旧版本会话展示到其他版本的同名节点。
+5. 未来扩展版本复制原版本节点，保留节点 `node_key`；新增节点的父节点必须是用户指定的 `source_node_key`。
 
 ## 5. 题库与练习服务表
 

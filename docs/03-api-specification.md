@@ -96,15 +96,16 @@
 | --- | --- | --- |
 | POST | `/learning/trees` | 创建树与生成任务。 |
 | GET | `/learning/trees` | 当前用户的树列表。 |
-| GET | `/learning/trees/{treeId}` | 返回当前版本；可传 `version` 查看历史。 |
+| GET | `/learning/trees/{treeId}` | 返回当前版本的节点结构；可传 `versionId` 查看历史。 |
+| GET | `/learning/trees/{treeId}/nodes/{nodeKey}/content` | 读取指定版本节点的展示 Markdown；根/非叶子返回子树，叶子返回直属正文。 |
 | GET | `/learning/trees/{treeId}/versions` | 版本列表和变更原因。 |
 | POST | `/learning/trees/{treeId}/versions/{versionId}/activate` | 将历史版本设为当前版本。 |
 | PATCH | `/learning/trees/{treeId}/credential` | 切换此树后续 AI 操作的默认模型凭据。 |
 | PATCH | `/learning/trees/{treeId}/nodes/{nodeKey}` | 编辑节点，异步生成新版本。 |
-| POST | `/learning/trees/{treeId}/follow-ups` | 节点追问，不改树。 |
-| GET | `/learning/trees/{treeId}/conversations` | 会话列表。 |
+| POST | `/learning/trees/{treeId}/follow-ups` | 仅叶子节点追问，不改树。 |
+| GET | `/learning/trees/{treeId}/conversations` | 查询指定版本、指定叶子节点的会话列表。 |
 | GET | `/learning/conversations/{conversationId}/messages` | 会话消息。 |
-| POST | `/learning/trees/{treeId}/expansions` | 生成直接子节点或从节点建新树。 |
+| POST | `/learning/trees/{treeId}/expansions` | 后续功能，首期关闭。 |
 
 创建知识树：
 
@@ -140,7 +141,32 @@
 }
 ```
 
-扩展节点：
+服务端使用 `versionId` 校验 `nodeKey` 属于该树版本且为叶子节点；根节点或非叶子节点返回 `422 LEARNING_NODE_NOT_LEAF`，并且不得创建会话或 AI 任务。成功时返回 `202 Accepted`，其中包含 `conversationId` 与 `taskId`。节点会话列表必须携带 `versionId` 和 `nodeKey` 查询参数；对根或非叶子节点同样返回 `LEARNING_NODE_NOT_LEAF`。
+
+节点展示内容：
+
+`GET /learning/trees/{treeId}/nodes/{nodeKey}/content?versionId=01J...` 返回：
+
+```json
+{
+  "treeId": "01J...",
+  "versionId": "01J...",
+  "nodeKey": "01J...",
+  "title": "为什么单线程还能高性能",
+  "path": [
+    {"nodeKey": "01J-root", "title": "Redis 单线程模型：如何做到高效与线程安全"},
+    {"nodeKey": "01J...", "title": "为什么单线程还能高性能"}
+  ],
+  "isLeaf": false,
+  "followUpAllowed": false,
+  "displayScope": "SUBTREE",
+  "displayMd": "## 为什么单线程还能高性能\\n..."
+}
+```
+
+叶子节点的 `displayScope` 为 `DIRECT`，`displayMd` 仅包含其直属正文。根节点和非叶子节点的 `displayScope` 为 `SUBTREE`，`displayMd` 包含该节点和全部后代的有序内容。服务端负责聚合 Markdown，客户端不得根据标题自行重建子树。
+
+后续功能：扩展节点。首期接口返回 `404 FEATURE_NOT_ENABLED`，不创建任务。
 
 ```json
 {
@@ -151,7 +177,7 @@
 }
 ```
 
-`action` 取值：`DIRECT_CHILDREN`、`NEW_TREE_FROM_NODE`。前者返回新树版本任务，后者返回新知识树任务。任务完成后前端通过 SSE 收到 `resourceType`、`treeId`、`versionId`。
+功能启用后，`action` 取值为 `DIRECT_CHILDREN`、`NEW_TREE_FROM_NODE`。前者返回新树版本任务，后者返回新知识树任务。任务完成后前端通过 SSE 收到 `resourceType`、`treeId`、`versionId`。
 
 树详情中的节点最小模型：
 
@@ -167,8 +193,10 @@
       "depth": 1,
       "sortOrder": 10,
       "title": "JVM 垃圾回收",
-      "contentMd": "...",
-      "childrenCount": 3
+      "directContentMd": "...",
+      "childrenCount": 3,
+      "isLeaf": false,
+      "followUpAllowed": false
     }
   ]
 }

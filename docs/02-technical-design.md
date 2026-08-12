@@ -57,11 +57,11 @@ Nacos / Sentinel / MySQL / Redis / MinIO / RocketMQ / XXL-JOB
 
 校验成功后，API Key 使用信封加密保存：业务数据库仅保存密文、KMS/环境注入的主密钥标识和 Key 指纹；仅 `ai-service` 在实际调用的短生命周期内解密。接口只返回脱敏后的末四位和验证状态，管理员、审计日志、异常信息和消息体不得包含明文 Key。
 
-`learning-service` 将受控的任务参数和 `credentialId` 传给 `ai-service`，不直接依赖模型 SDK。知识树创建时保存用户选定的默认凭据，追问和节点扩展默认使用该凭据；用户可在树设置中切换。题库 MinerU ZIP 导入必须显式提供凭据。每个 AI 任务只能使用任务发起用户拥有且处于 `VERIFIED` 状态的凭据；任务记录保存凭据 ID 和指纹快照用于审计，绝不保存密钥。DeepSeek 使用其 OpenAI 兼容聊天接口；DashScope 使用其 Java SDK/官方聊天接口，两者在 `ai-service` 内被统一为流式聊天能力。
+`learning-service` 将受控的任务参数和 `credentialId` 传给 `ai-service`，不直接依赖模型 SDK。知识树创建时保存用户选定的默认凭据，叶子节点追问默认使用该凭据；用户可在树设置中切换。题库 MinerU ZIP 导入必须显式提供凭据。每个 AI 任务只能使用任务发起用户拥有且处于 `VERIFIED` 状态的凭据；任务记录保存凭据 ID 和指纹快照用于审计，绝不保存密钥。DeepSeek 使用其 OpenAI 兼容聊天接口；DashScope 使用其 Java SDK/官方聊天接口，两者在 `ai-service` 内被统一为流式聊天能力。
 
 AI 调用只对连接超时、HTTP 429 和提供商 5xx 进行最多两次指数退避重试；认证失败、模型不存在、余额不足、参数校验失败和已经收到流式内容后的异常均不重试。重试耗尽后任务失败并向用户反馈，不自动切换到其他凭据或模型。
 
-AgentScope Java 的生产调用应复用单例 Agent，通过 `RuntimeContext(userId, sessionId)` 隔离并发会话；WebFlux 链路保持响应式，业务服务中不调用阻塞式 `.block()`。学习树生成、节点追问和题目解析分别使用不同的系统 Prompt、工具权限和 Token 上限。
+AgentScope Java 的生产调用应复用单例 Agent，通过 `RuntimeContext(userId, sessionId)` 隔离并发会话；WebFlux 链路保持响应式，业务服务中不调用阻塞式 `.block()`。学习树生成、叶子节点追问和题目解析分别使用不同的系统 Prompt、工具权限和 Token 上限。追问提交前，`learning-service` 必须以请求的 `versionId` 查询节点，并确认该节点不存在子节点；根节点或非叶子节点直接返回业务错误，不创建会话、AI 任务或 RocketMQ 消息。
 
 模型输出必须同时通过以下校验：
 
@@ -69,6 +69,8 @@ AgentScope Java 的生产调用应复用单例 Agent，通过 `RuntimeContext(us
 2. 最大节点数、最大深度、最大单节点长度校验。
 3. 解析后树只有一个根、没有孤立节点或循环。
 4. 敏感内容和提示注入检测。
+
+标题解析器只把 ATX 标题映射为节点。每个 `learn_node.content_md` 仅保存标题后的直属正文；节点详情读取时由 `learning-service` 按 `parent_node_key` 和 `sort_order` 深度优先聚合子树，并在输出中恢复标题层级。根节点返回完整文档，非叶子节点返回该节点子树，叶子节点只返回直属正文。前端只消费该读取结果，不实现 Markdown 树解析。
 
 校验失败时任务进入 `FAILED`，原始输出仅向创建者和管理员可见，用于重试诊断。
 
@@ -83,14 +85,14 @@ AgentScope Java 的生产调用应复用单例 Agent，通过 `RuntimeContext(us
 - 账号密码登录；注册与密码重置请求必须携带邮箱验证码。验证码存 Redis 并设置短 TTL、单次消费和按邮箱/IP 限流。管理员初始化数据仅由数据库迁移/受控运维脚本写入，不提供公共角色授予接口。
 - RBAC 使用“用户-角色-权限”模型：Gateway 路由和服务方法均按权限码校验，`ADMIN` 角色只是在初始化时被授予完整后台权限的预置角色。
 - 修改操作携带 `Idempotency-Key`，AI/导入创建接口以用户和键去重。
-- 用户删除 AI 凭据后，引用该凭据的知识树保留但默认凭据置空；后续追问或扩展要求用户选择新的已验证凭据。
+- 用户删除 AI 凭据后，引用该凭据的知识树保留但默认凭据置空；后续叶子节点追问要求用户选择新的已验证凭据。
 
 ## 6. 缓存、限流与任务
 
 - Redis：Sa-Token 会话、热点文章、验证码、短期幂等结果、SSE 连接元数据和分布式锁。
 - Sentinel：登录、AI 创建、文件上传凭证、公开文章查询分别配置限流与降级；AI 路由必须设置按用户的额度限制。
 - XXL-JOB：定时发布文章、Outbox 补投、孤儿上传清理、过期 AI 任务清理、MinerU ZIP 解析失败重试、每日练习统计汇总。
-- RocketMQ：`ai.task.created`、`question.mineru.import.requested`、`question.import.completed`、`learning.tree.generated`、`practice.recorded`。所有消费者幂等。
+- RocketMQ：`ai.task.created`、`question.mineru.import.requested`、`question.import.completed`、`learning.tree.generated`、`practice.recorded`。所有消费者幂等。节点扩展相关事件在首期不投递，保留给后续功能启用。
 
 ## 7. 可观测性与交付
 
