@@ -6,8 +6,11 @@
 | --- | --- |
 | [01-product-requirements.md](01-product-requirements.md) | 产品范围、用户流程、验收标准和待确认的产品规则 |
 | [02-technical-design.md](02-technical-design.md) | 微服务边界、技术选型、部署与非功能要求 |
-| [03-api-specification.md](03-api-specification.md) | HTTP/SSE 接口约定与主要资源接口 |
-| [04-data-model.md](04-data-model.md) | 数据模型、表职责、关键约束与建表顺序 |
+| [03-api-specification.md](03-api-specification.md) | HTTP 全局约定、任务状态机、错误码与并发规则 |
+| [03-api-reference.md](03-api-reference.md) | 按端点聚合的开发手册：路径、参数、请求体和响应体在同一节 |
+| [openapi.yaml](openapi.yaml) | 可机器校验的 OpenAPI 3.1 唯一接口契约；修改后运行生成脚本更新接口手册 |
+| [04-schema.sql](04-schema.sql) | 可直接执行的 MySQL 8.0 建库脚本，字段与索引均带说明 |
+| [04-data-model.md](04-data-model.md) | 建库和后续 Flyway 迁移说明 |
 | [05-frontend-guidelines.md](05-frontend-guidelines.md) | 面向后端协作的前端技术路线和页面契约 |
 
 ## 第一轮需要确认的决策
@@ -29,6 +32,9 @@
 13. AI 调用只对可重试错误做内部重试，不自动切换用户模型；失败后反馈用户。
 14. MinerU 原 ZIP 保留 15 天；MySQL 每日备份与 MinIO 增量备份均保留 7 天。
 15. “生成直接子节点”和“从节点生成新树”保留为后续版本能力；首期不在界面和服务流程中开放。
+16. 一期永久使用单个 MySQL schema；可靠消息统一写入 `sys_outbox_event`，幂等统一写入 `sys_idempotency_record`，通过服务类型字段区分来源。未来只考虑按业务 ID 水平分表/分库，不做按服务垂直拆分。
+17. 文章状态为 `DRAFT`、`SCHEDULED`、`PUBLISHED`、`OFFLINE`、`ARCHIVED`；已发布或定时文章禁止编辑，必须先下架。
+18. 软删记录的活跃唯一性使用生成列，不把可空 `deleted_at` 直接放进唯一索引；扩展 JSON 仅按需用于聚合根，不能作为每张表的通用字段。
 
 ## 术语约定
 

@@ -1,0 +1,30 @@
+# 所有 TODO_* 均为部署时必须通过环境变量填写的项目；不得在仓库中放入真实凭据。
+server:
+  port: ${SERVER_PORT:8085} # TODO: file-service 端口
+spring:
+  application.name: file-service
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/hengxue_file?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC} # TODO: 服务私有数据库
+    username: ${DB_USERNAME:root} # TODO: 数据库账号
+    password: ${DB_PASSWORD:} # TODO: 数据库密码
+  cloud.nacos:
+    username: ${NACOS_USERNAME:nacos} # TODO: Nacos 用户名
+    password: ${NACOS_PASSWORD:nacos} # TODO: Nacos 密码
+    discovery:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848} # TODO: Nacos 地址
+      namespace: ${NACOS_NAMESPACE:local} # TODO: namespace ID
+      group: ${NACOS_GROUP:DEFAULT_GROUP}
+  config.import: optional:nacos:${spring.application.name}.yaml?group=${NACOS_GROUP:DEFAULT_GROUP}&refreshEnabled=true
+dubbo:
+  application.name: ${spring.application.name}
+  registry.address: nacos://${NACOS_SERVER_ADDR:127.0.0.1:8848}?namespace=${NACOS_NAMESPACE:local} # TODO: 注册中心
+  protocol:
+    name: tri
+    port: ${DUBBO_PORT:20885} # TODO: Dubbo 端口
+hengxue:
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9000} # TODO: MinIO 地址
+    access-key: ${MINIO_ACCESS_KEY:} # TODO: MinIO Access Key
+    secret-key: ${MINIO_SECRET_KEY:} # TODO: MinIO Secret Key，禁止写入 Nacos
+    private-bucket: ${MINIO_PRIVATE_BUCKET:hengxue-private} # TODO: 私有桶名
+management.endpoints.web.exposure.include: health,info,prometheus

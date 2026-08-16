@@ -1,0 +1,50 @@
+# 所有 TODO_* 均为部署时必须通过环境变量填写的项目；不得在仓库中放入真实凭据。
+server:
+  port: ${SERVER_PORT:8081} # TODO: auth-service 端口
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/hengxue_auth?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC} # TODO: 服务私有数据库
+    username: ${DB_USERNAME:root} # TODO: 数据库账号
+    password: ${DB_PASSWORD:} # TODO: 数据库密码，只能由环境变量注入
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1} # TODO: Redis 主机
+      port: ${REDIS_PORT:6379} # TODO: Redis 端口
+      password: ${REDIS_PASSWORD:} # TODO: Redis 密码
+  cloud:
+    nacos:
+      username: ${NACOS_USERNAME:nacos} # TODO: Nacos 用户名
+      password: ${NACOS_PASSWORD:nacos} # TODO: Nacos 密码
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848} # TODO: Nacos 地址
+        namespace: ${NACOS_NAMESPACE:local} # TODO: namespace ID
+        group: ${NACOS_GROUP:DEFAULT_GROUP} # TODO: 服务分组
+  config:
+    import: optional:nacos:${spring.application.name}.yaml?group=${NACOS_GROUP:DEFAULT_GROUP}&refreshEnabled=true
+
+dubbo:
+  application:
+    name: ${spring.application.name}
+  registry:
+    address: nacos://${NACOS_SERVER_ADDR:127.0.0.1:8848}?namespace=${NACOS_NAMESPACE:local} # TODO: Dubbo 注册中心
+  protocol:
+    name: tri
+    port: ${DUBBO_PORT:20881} # TODO: Dubbo 协议端口
+
+sa-token:
+  token-name: ${SA_TOKEN_NAME:satoken} # TODO: 必须和 Gateway 一致
+  jwt-secret-key: ${SA_TOKEN_JWT_SECRET:} # TODO: 仅环境变量注入，生产环境必填
+
+hengxue:
+  smtp:
+    host: smtp.qq.com
+    port: 465
+    username: ${QQ_SMTP_USERNAME:} # TODO: QQ 邮箱账号
+    authorization-code: ${QQ_SMTP_AUTHORIZATION_CODE:} # TODO: QQ 邮箱授权码，禁止写入 Nacos、数据库或日志
+    from: ${QQ_SMTP_FROM:} # TODO: 发件人地址
+
+management:
+  endpoints.web.exposure.include: health,info,prometheus

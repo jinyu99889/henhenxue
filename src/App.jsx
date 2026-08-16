@@ -25,7 +25,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import authorAvatar from './assets/jinyu-avatar.jpg'
 
 const easing = [0.16, 1, 0.3, 1]
-const heroVideoUrl = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_215831_c6a8989c-d716-4d8d-8745-e972a2eec711.mp4'
+const heroVideoUrl = '/media/hero-hand.mp4'
 
 const routes = {
   '/': '首页',
@@ -200,6 +200,12 @@ function App() {
 function PersistentHeroVideo({ active }) {
   const videoRef = useRef(null)
 
+  const freezeOnFinalFrame = (event) => {
+    const video = event.currentTarget
+    video.currentTime = Math.max(0, video.duration - 0.08)
+    video.pause()
+  }
+
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
@@ -215,7 +221,7 @@ function PersistentHeroVideo({ active }) {
   return (
     <motion.div className="persistent-video-motion" initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.8, ease: easing }}>
       <div className={`persistent-video-stage ${active ? 'is-active' : ''}`} aria-hidden={!active}>
-        <video ref={videoRef} className="background-video" autoPlay loop muted playsInline preload="auto">
+        <video ref={videoRef} className="background-video" autoPlay muted playsInline preload="auto" onEnded={freezeOnFinalFrame}>
           <source src={heroVideoUrl} type="video/mp4" />
         </video>
         <div className="video-wash" aria-hidden="true" />
@@ -478,7 +484,7 @@ function AuthPage({ mode, navigate }) {
   const title = isLogin ? '继续你的学习。' : <>开始建立自己的<br />知识系统。</>
 
   return (
-    <main className="auth-shell"><div className="auth-media"><video autoPlay loop muted playsInline><source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_215831_c6a8989c-d716-4d8d-8745-e972a2eec711.mp4" type="video/mp4" /></video><div className="auth-media-wash" /><button type="button" className="auth-back" onClick={() => navigate('/')}><ArrowLeft size={15} />返回首页</button><div className="auth-wordmark"><BrandMark /><span>狠狠学</span></div><p>让问题有路径，<br />让练习有回声。</p></div><section className="auth-panel"><div className="auth-mobile-chrome"><button type="button" className="brand" onClick={() => navigate('/')}><BrandMark /><span>狠狠学</span></button><button type="button" onClick={() => navigate('/')}><ArrowLeft size={14} />首页</button></div><div className="auth-switch"><button type="button" className={isLogin ? 'is-active' : ''} onClick={() => navigate('/login')}>登录</button><button type="button" className={!isLogin ? 'is-active' : ''} onClick={() => navigate('/register')}>注册</button></div><div className="auth-heading"><span className="section-label">{isLogin ? '欢迎回来' : '创建账号'}</span><h1>{title}</h1><p>{isLogin ? '用户名或邮箱都可以登录。' : '使用邮箱完成验证后，就能创建私有题库和知识树。'}</p></div><form className="auth-form" onSubmit={submit}><label>{isLogin ? '用户名或邮箱' : '用户名'}<input value={form.account} onChange={update('account')} placeholder={isLogin ? 'name@example.com' : '8 - 64 位'} /></label>{!isLogin && <label>邮箱地址<input type="email" value={form.email} onChange={update('email')} placeholder="name@example.com" /></label>}{!isLogin && <label>邮箱验证码<div className="code-field"><input value={form.code} onChange={update('code')} placeholder="6 位验证码" /><button type="button">发送验证码</button></div></label>}<label>密码<input type="password" value={form.password} onChange={update('password')} placeholder="8 - 64 位" /></label>{isLogin && <button type="button" className="forgot-password">忘记密码？</button>}<button type="submit" className="primary-action auth-submit">{isLogin ? '登录并继续' : '创建我的账号'} <ArrowUpRight size={15} /></button>{notice && <p className="auth-notice"><Mail size={14} />{notice}</p>}</form></section>
+    <main className="auth-shell"><div className="auth-media"><video autoPlay muted playsInline preload="auto" onEnded={(event) => { const video = event.currentTarget; video.currentTime = Math.max(0, video.duration - 0.08); video.pause() }}><source src={heroVideoUrl} type="video/mp4" /></video><div className="auth-media-wash" /><button type="button" className="auth-back" onClick={() => navigate('/')}><ArrowLeft size={15} />返回首页</button><div className="auth-wordmark"><BrandMark /><span>狠狠学</span></div><p>让问题有路径，<br />让练习有回声。</p></div><section className="auth-panel"><div className="auth-mobile-chrome"><button type="button" className="brand" onClick={() => navigate('/')}><BrandMark /><span>狠狠学</span></button><button type="button" onClick={() => navigate('/')}><ArrowLeft size={14} />首页</button></div><div className="auth-switch"><button type="button" className={isLogin ? 'is-active' : ''} onClick={() => navigate('/login')}>登录</button><button type="button" className={!isLogin ? 'is-active' : ''} onClick={() => navigate('/register')}>注册</button></div><div className="auth-heading"><span className="section-label">{isLogin ? '欢迎回来' : '创建账号'}</span><h1>{title}</h1><p>{isLogin ? '用户名或邮箱都可以登录。' : '使用邮箱完成验证后，就能创建私有题库和知识树。'}</p></div><form className="auth-form" onSubmit={submit}><label>{isLogin ? '用户名或邮箱' : '用户名'}<input value={form.account} onChange={update('account')} placeholder={isLogin ? 'name@example.com' : '8 - 64 位'} /></label>{!isLogin && <label>邮箱地址<input type="email" value={form.email} onChange={update('email')} placeholder="name@example.com" /></label>}{!isLogin && <label>邮箱验证码<div className="code-field"><input value={form.code} onChange={update('code')} placeholder="6 位验证码" /><button type="button">发送验证码</button></div></label>}<label>密码<input type="password" value={form.password} onChange={update('password')} placeholder="8 - 64 位" /></label>{isLogin && <button type="button" className="forgot-password">忘记密码？</button>}<button type="submit" className="primary-action auth-submit">{isLogin ? '登录并继续' : '创建我的账号'} <ArrowUpRight size={15} /></button>{notice && <p className="auth-notice"><Mail size={14} />{notice}</p>}</form></section>
     </main>
   )
 }

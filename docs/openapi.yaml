@@ -1,0 +1,618 @@
+openapi: 3.1.0
+info:
+  title: 狠狠学 HTTP API
+  version: 1.0.0
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+  description: |
+    第一期开工前的规范性 HTTP 契约。所有响应使用 ApiResponse 包装；
+    字段约束、业务状态机和补充示例见 03-api-specification.md。
+servers:
+  - url: /api/v1
+security:
+  - SaToken: []
+paths:
+  /auth/register:
+    post:
+      security: []
+      summary: Register
+      operationId: register
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/RegisterRequest'}
+      responses: {'201': {$ref: '#/components/responses/User'}, '400': {$ref: '#/components/responses/Error'}, '409': {$ref: '#/components/responses/Error'}}
+  /auth/login:
+    post:
+      security: []
+      summary: Login
+      operationId: login
+      requestBody: {$ref: '#/components/requestBodies/LoginRequest'}
+      responses: {'200': {$ref: '#/components/responses/Login'}, '401': {$ref: '#/components/responses/Error'}}
+  /auth/email-codes:
+    post:
+      security: []
+      summary: Send email code
+      operationId: sendEmailCode
+      requestBody: {$ref: '#/components/requestBodies/EmailCodeRequest'}
+      responses: {'202': {$ref: '#/components/responses/Empty'}, '400': {$ref: '#/components/responses/Error'}, '429': {$ref: '#/components/responses/Error'}}
+  /auth/password-resets:
+    post:
+      security: []
+      summary: Reset password
+      operationId: resetPassword
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/PasswordResetRequest'}
+      responses: {'204': {$ref: '#/components/responses/NoContent'}, '400': {$ref: '#/components/responses/Error'}}
+  /auth/password-changes:
+    post:
+      summary: Change password
+      operationId: changePassword
+      requestBody: {$ref: '#/components/requestBodies/PasswordChangeRequest'}
+      responses: {'204': {$ref: '#/components/responses/NoContent'}, '400': {$ref: '#/components/responses/Error'}}
+  /auth/logout:
+    post:
+      summary: Logout
+      operationId: logout
+      responses: {'204': {$ref: '#/components/responses/NoContent'}, '400': {$ref: '#/components/responses/Error'}}
+  /auth/refresh:
+    post:
+      summary: Refresh session
+      operationId: refreshSession
+      responses: {'200': {$ref: '#/components/responses/Login'}, '401': {$ref: '#/components/responses/Error'}}
+  /users/me:
+    get:
+      summary: Get current user
+      operationId: getCurrentUser
+      responses: {'200': {$ref: '#/components/responses/User'}, '401': {$ref: '#/components/responses/Error'}}
+    patch:
+      summary: Patch current user
+      operationId: patchCurrentUser
+      parameters: [{$ref: '#/components/parameters/IfMatch'}]
+      requestBody: {$ref: '#/components/requestBodies/UserPatchRequest'}
+      responses: {'200': {$ref: '#/components/responses/User'}, '409': {$ref: '#/components/responses/Error'}}
+  /ai-credentials:
+    get:
+      summary: List AI credentials
+      operationId: listAiCredentials
+      responses: {'200': {$ref: '#/components/responses/CredentialList'}, '400': {$ref: '#/components/responses/Error'}}
+    post:
+      summary: Create AI credential
+      operationId: createAiCredential
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/CredentialUpsertRequest'}
+      responses: {'201': {$ref: '#/components/responses/Credential'}, '422': {$ref: '#/components/responses/Error'}}
+  /ai-credentials/{credentialId}:
+    parameters: [{$ref: '#/components/parameters/CredentialId'}]
+    patch:
+      summary: Patch AI credential
+      operationId: patchAiCredential
+      parameters: [{$ref: '#/components/parameters/IfMatch'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/CredentialUpsertRequest'}
+      responses: {'200': {$ref: '#/components/responses/Credential'}, '409': {$ref: '#/components/responses/Error'}}
+    delete:
+      summary: Revoke AI credential
+      operationId: revokeAiCredential
+      parameters: [{$ref: '#/components/parameters/IfMatch'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'204': {$ref: '#/components/responses/NoContent'}, '409': {$ref: '#/components/responses/Error'}}
+  /articles:
+    get:
+      security: []
+      summary: List articles
+      operationId: listArticles
+      parameters: [{$ref: '#/components/parameters/Page'}, {$ref: '#/components/parameters/PageSize'}, {$ref: '#/components/parameters/Keyword'}, {$ref: '#/components/parameters/CategorySlug'}, {$ref: '#/components/parameters/TagSlug'}, {$ref: '#/components/parameters/ArticleSort'}]
+      responses: {'200': {$ref: '#/components/responses/ArticlePage'}, '400': {$ref: '#/components/responses/Error'}}
+  /articles/{slug}:
+    get:
+      security: []
+      summary: Get article
+      operationId: getArticle
+      parameters: [{$ref: '#/components/parameters/Slug'}]
+      responses: {'200': {$ref: '#/components/responses/Article'}, '404': {$ref: '#/components/responses/Error'}}
+  /pages/about:
+    get:
+      security: []
+      summary: Get about page
+      operationId: getAboutPage
+      responses: {'200': {$ref: '#/components/responses/Article'}, '404': {$ref: '#/components/responses/Error'}}
+  /categories:
+    get:
+      security: []
+      summary: List categories
+      operationId: listCategories
+      responses: {'200': {$ref: '#/components/responses/CategoryList'}, '400': {$ref: '#/components/responses/Error'}}
+  /tags:
+    get:
+      security: []
+      summary: List tags
+      operationId: listTags
+      responses: {'200': {$ref: '#/components/responses/TagList'}, '400': {$ref: '#/components/responses/Error'}}
+  /archives:
+    get:
+      security: []
+      summary: List archives
+      operationId: listArchives
+      responses: {'200': {$ref: '#/components/responses/ArchiveList'}, '400': {$ref: '#/components/responses/Error'}}
+  /articles/{articleId}/favorite:
+    parameters: [{$ref: '#/components/parameters/ArticleId'}]
+    post:
+      summary: Favorite article
+      operationId: favoriteArticle
+      responses: {'204': {$ref: '#/components/responses/NoContent'}, '400': {$ref: '#/components/responses/Error'}}
+    delete:
+      summary: Unfavorite article
+      operationId: unfavoriteArticle
+      responses: {'204': {$ref: '#/components/responses/NoContent'}, '400': {$ref: '#/components/responses/Error'}}
+  /admin/articles:
+    post:
+      summary: Create article draft
+      operationId: createArticleDraft
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/ArticleUpsertRequest'}
+      responses: {'201': {$ref: '#/components/responses/ArticleAdmin'}, '400': {$ref: '#/components/responses/Error'}}
+  /admin/articles/{articleId}:
+    parameters: [{$ref: '#/components/parameters/ArticleId'}]
+    patch:
+      summary: Patch article
+      operationId: patchArticle
+      parameters: [{$ref: '#/components/parameters/IfMatch'}]
+      requestBody: {$ref: '#/components/requestBodies/ArticleUpsertRequest'}
+      responses: {'200': {$ref: '#/components/responses/ArticleAdmin'}, '409': {$ref: '#/components/responses/Error'}}
+  /admin/articles/{articleId}/publish:
+    post:
+      summary: Publish article
+      operationId: publishArticle
+      parameters: [{$ref: '#/components/parameters/ArticleId'}, {$ref: '#/components/parameters/IfMatch'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/ArticlePublishRequest'}
+      responses: {'200': {$ref: '#/components/responses/ArticleAdmin'}, '409': {$ref: '#/components/responses/Error'}}
+  /admin/articles/{articleId}/offline:
+    post:
+      summary: Offline article
+      operationId: offlineArticle
+      parameters: [{$ref: '#/components/parameters/ArticleId'}, {$ref: '#/components/parameters/IfMatch'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'200': {$ref: '#/components/responses/ArticleAdmin'}, '409': {$ref: '#/components/responses/Error'}}
+  /admin/articles/{articleId}/revisions:
+    get:
+      summary: List article revisions
+      operationId: listArticleRevisions
+      parameters: [{$ref: '#/components/parameters/ArticleId'}]
+      responses: {'200': {$ref: '#/components/responses/RevisionList'}, '400': {$ref: '#/components/responses/Error'}}
+  /admin/articles/{articleId}/revisions/{revisionId}/restore:
+    post:
+      summary: Restore article revision
+      operationId: restoreArticleRevision
+      parameters: [{$ref: '#/components/parameters/ArticleId'}, {$ref: '#/components/parameters/RevisionId'}, {$ref: '#/components/parameters/IfMatch'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'200': {$ref: '#/components/responses/ArticleAdmin'}, '409': {$ref: '#/components/responses/Error'}}
+  /admin/categories:
+    post:
+      summary: Create category
+      operationId: createCategory
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/CategoryUpsertRequest'}
+      responses: {'201': {$ref: '#/components/responses/CategoryAdmin'}, '400': {$ref: '#/components/responses/Error'}}
+  /admin/categories/{categoryId}:
+    patch:
+      summary: Patch category
+      operationId: patchCategory
+      parameters: [{$ref: '#/components/parameters/CategoryId'}, {$ref: '#/components/parameters/IfMatch'}]
+      requestBody: {$ref: '#/components/requestBodies/CategoryUpsertRequest'}
+      responses: {'200': {$ref: '#/components/responses/CategoryAdmin'}, '400': {$ref: '#/components/responses/Error'}}
+  /admin/categories/{categoryId}/archive:
+    post:
+      summary: Archive category
+      operationId: archiveCategory
+      parameters: [{$ref: '#/components/parameters/CategoryId'}, {$ref: '#/components/parameters/IfMatch'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'200': {$ref: '#/components/responses/CategoryAdmin'}, '400': {$ref: '#/components/responses/Error'}}
+  /admin/tags:
+    post:
+      summary: Create tag
+      operationId: createTag
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/TagUpsertRequest'}
+      responses: {'201': {$ref: '#/components/responses/TagAdmin'}, '400': {$ref: '#/components/responses/Error'}}
+  /admin/tags/{tagId}:
+    patch:
+      summary: Patch tag
+      operationId: patchTag
+      parameters: [{$ref: '#/components/parameters/TagId'}, {$ref: '#/components/parameters/IfMatch'}]
+      requestBody: {$ref: '#/components/requestBodies/TagUpsertRequest'}
+      responses: {'200': {$ref: '#/components/responses/TagAdmin'}, '400': {$ref: '#/components/responses/Error'}}
+  /admin/tags/{tagId}/archive:
+    post:
+      summary: Archive tag
+      operationId: archiveTag
+      parameters: [{$ref: '#/components/parameters/TagId'}, {$ref: '#/components/parameters/IfMatch'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'200': {$ref: '#/components/responses/TagAdmin'}, '400': {$ref: '#/components/responses/Error'}}
+  /files/upload-credentials:
+    post:
+      summary: Create upload credential
+      operationId: createUploadCredential
+      requestBody: {$ref: '#/components/requestBodies/UploadCredentialRequest'}
+      responses: {'201': {$ref: '#/components/responses/UploadCredential'}, '400': {$ref: '#/components/responses/Error'}}
+  /files/{fileId}/complete:
+    post:
+      summary: Complete upload
+      operationId: completeUpload
+      parameters: [{$ref: '#/components/parameters/FileId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'200': {$ref: '#/components/responses/FileObject'}, '422': {$ref: '#/components/responses/Error'}}
+  /files/{fileId}/download-url:
+    get:
+      summary: Get download url
+      operationId: getDownloadUrl
+      parameters: [{$ref: '#/components/parameters/FileId'}]
+      responses: {'200': {$ref: '#/components/responses/DownloadUrl'}, '404': {$ref: '#/components/responses/Error'}}
+  /tasks/{taskId}:
+    get:
+      summary: Get task
+      operationId: getTask
+      parameters: [{$ref: '#/components/parameters/TaskId'}]
+      responses: {'200': {$ref: '#/components/responses/Task'}, '404': {$ref: '#/components/responses/Error'}}
+  /learning/trees:
+    get:
+      summary: List trees
+      operationId: listTrees
+      parameters: [{$ref: '#/components/parameters/Page'}, {$ref: '#/components/parameters/PageSize'}]
+      responses: {'200': {$ref: '#/components/responses/TreePage'}, '400': {$ref: '#/components/responses/Error'}}
+    post:
+      summary: Create tree
+      operationId: createTree
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/CreateTreeRequest'}
+      responses: {'202': {$ref: '#/components/responses/TaskAccepted'}, '400': {$ref: '#/components/responses/Error'}}
+  /learning/trees/{treeId}:
+    get:
+      summary: Get tree
+      operationId: getTree
+      parameters: [{$ref: '#/components/parameters/TreeId'}]
+      responses: {'200': {$ref: '#/components/responses/Tree'}, '400': {$ref: '#/components/responses/Error'}, '409': {$ref: '#/components/responses/Error'}}
+  /learning/trees/{treeId}/credential:
+    patch:
+      summary: Patch tree credential
+      operationId: patchTreeCredential
+      parameters: [{$ref: '#/components/parameters/TreeId'}, {$ref: '#/components/parameters/IfMatch'}]
+      requestBody: {$ref: '#/components/requestBodies/TreeCredentialRequest'}
+      responses: {'200': {$ref: '#/components/responses/Tree'}, '409': {$ref: '#/components/responses/Error'}}
+  /learning/trees/{treeId}/nodes/{nodeKey}/content:
+    get:
+      summary: Get tree node content
+      operationId: getTreeNodeContent
+      parameters: [{$ref: '#/components/parameters/TreeId'}, {$ref: '#/components/parameters/NodeKey'}]
+      responses: {'200': {$ref: '#/components/responses/NodeContent'}, '400': {$ref: '#/components/responses/Error'}}
+  /learning/trees/{treeId}/follow-ups:
+    post:
+      summary: Create follow up
+      operationId: createFollowUp
+      parameters: [{$ref: '#/components/parameters/TreeId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/FollowUpRequest'}
+      responses: {'202': {$ref: '#/components/responses/FollowUpAccepted'}, '422': {$ref: '#/components/responses/Error'}}
+  /learning/trees/{treeId}/conversations:
+    get:
+      summary: List node conversations
+      operationId: listNodeConversations
+      parameters: [{$ref: '#/components/parameters/TreeId'}, {$ref: '#/components/parameters/NodeKeyQuery'}]
+      responses: {'200': {$ref: '#/components/responses/ConversationList'}, '400': {$ref: '#/components/responses/Error'}}
+  /learning/conversations/{conversationId}/messages:
+    get:
+      summary: List conversation messages
+      operationId: listConversationMessages
+      parameters: [{$ref: '#/components/parameters/ConversationId'}, {$ref: '#/components/parameters/Page'}, {$ref: '#/components/parameters/PageSize'}]
+      responses: {'200': {$ref: '#/components/responses/MessagePage'}, '400': {$ref: '#/components/responses/Error'}}
+  /question-libraries:
+    get:
+      summary: List question libraries
+      operationId: listQuestionLibraries
+      responses: {'200': {$ref: '#/components/responses/LibraryList'}, '400': {$ref: '#/components/responses/Error'}}
+    post:
+      summary: Create question library
+      operationId: createQuestionLibrary
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/LibraryCreateRequest'}
+      responses: {'201': {$ref: '#/components/responses/Library'}, '400': {$ref: '#/components/responses/Error'}}
+  /question-libraries/{libraryId}:
+    patch:
+      summary: Patch question library
+      operationId: patchQuestionLibrary
+      parameters: [{$ref: '#/components/parameters/LibraryId'}, {$ref: '#/components/parameters/IfMatch'}]
+      requestBody: {$ref: '#/components/requestBodies/LibraryPatchRequest'}
+      responses: {'200': {$ref: '#/components/responses/Library'}, '400': {$ref: '#/components/responses/Error'}}
+  /question-libraries/{libraryId}/imports:
+    post:
+      summary: Create question import
+      operationId: createQuestionImport
+      parameters: [{$ref: '#/components/parameters/LibraryId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/QuestionImportRequest'}
+      responses: {'202': {$ref: '#/components/responses/TaskAccepted'}, '400': {$ref: '#/components/responses/Error'}}
+  /question-imports/{importId}:
+    get:
+      summary: Get question import
+      operationId: getQuestionImport
+      parameters: [{$ref: '#/components/parameters/ImportId'}]
+      responses: {'200': {$ref: '#/components/responses/QuestionImport'}, '400': {$ref: '#/components/responses/Error'}}
+  /question-libraries/{libraryId}/questions:
+    get:
+      summary: List library questions
+      operationId: listLibraryQuestions
+      parameters: [{$ref: '#/components/parameters/LibraryId'}, {$ref: '#/components/parameters/Page'}, {$ref: '#/components/parameters/PageSize'}]
+      responses: {'200': {$ref: '#/components/responses/QuestionPage'}, '400': {$ref: '#/components/responses/Error'}}
+    post:
+      summary: Create question
+      operationId: createQuestion
+      parameters: [{$ref: '#/components/parameters/LibraryId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/QuestionUpsertRequest'}
+      responses: {'201': {$ref: '#/components/responses/Question'}, '400': {$ref: '#/components/responses/Error'}}
+  /questions/{questionId}:
+    patch:
+      summary: Patch question
+      operationId: patchQuestion
+      parameters: [{$ref: '#/components/parameters/QuestionId'}, {$ref: '#/components/parameters/IfMatch'}]
+      requestBody: {$ref: '#/components/requestBodies/QuestionUpsertRequest'}
+      responses: {'200': {$ref: '#/components/responses/Question'}, '400': {$ref: '#/components/responses/Error'}}
+  /questions/{questionId}/publish:
+    post:
+      summary: Publish question
+      operationId: publishQuestion
+      parameters: [{$ref: '#/components/parameters/QuestionId'}, {$ref: '#/components/parameters/IfMatch'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'200': {$ref: '#/components/responses/Question'}, '400': {$ref: '#/components/responses/Error'}}
+  /questions/{questionId}/archive:
+    post:
+      summary: Archive question
+      operationId: archiveQuestion
+      parameters: [{$ref: '#/components/parameters/QuestionId'}, {$ref: '#/components/parameters/IfMatch'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'200': {$ref: '#/components/responses/Question'}, '400': {$ref: '#/components/responses/Error'}}
+  /question-libraries/{libraryId}/questions/{questionId}:
+    delete:
+      summary: Remove question from library
+      operationId: removeQuestionFromLibrary
+      parameters: [{$ref: '#/components/parameters/LibraryId'}, {$ref: '#/components/parameters/QuestionId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'204': {$ref: '#/components/responses/NoContent'}, '400': {$ref: '#/components/responses/Error'}}
+  /practice-sessions:
+    get:
+      summary: List practice sessions
+      operationId: listPracticeSessions
+      parameters: [{$ref: '#/components/parameters/Page'}, {$ref: '#/components/parameters/PageSize'}]
+      responses: {'200': {$ref: '#/components/responses/PracticePage'}, '400': {$ref: '#/components/responses/Error'}}
+    post:
+      summary: Create practice session
+      operationId: createPracticeSession
+      parameters: [{$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/PracticeCreateRequest'}
+      responses: {'201': {$ref: '#/components/responses/Practice'}, '400': {$ref: '#/components/responses/Error'}}
+  /practice-sessions/{sessionId}:
+    get:
+      summary: Get practice session
+      operationId: getPracticeSession
+      parameters: [{$ref: '#/components/parameters/SessionId'}]
+      responses: {'200': {$ref: '#/components/responses/Practice'}, '400': {$ref: '#/components/responses/Error'}}
+  /practice-sessions/{sessionId}/next:
+    get:
+      summary: Get next practice question
+      operationId: getNextPracticeQuestion
+      parameters: [{$ref: '#/components/parameters/SessionId'}]
+      responses: {'200': {$ref: '#/components/responses/PracticeQuestion'}, '404': {$ref: '#/components/responses/Error'}}
+  /practice-sessions/{sessionId}/answers:
+    post:
+      summary: Submit practice answer
+      operationId: submitPracticeAnswer
+      parameters: [{$ref: '#/components/parameters/SessionId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      requestBody: {$ref: '#/components/requestBodies/PracticeAnswerRequest'}
+      responses: {'200': {$ref: '#/components/responses/PracticeAnswer'}, '400': {$ref: '#/components/responses/Error'}}
+  /practice-sessions/{sessionId}/finish:
+    post:
+      summary: Finish practice session
+      operationId: finishPracticeSession
+      parameters: [{$ref: '#/components/parameters/SessionId'}, {$ref: '#/components/parameters/IdempotencyKey'}]
+      responses: {'200': {$ref: '#/components/responses/Practice'}, '400': {$ref: '#/components/responses/Error'}}
+  /practice-statistics:
+    get:
+      summary: Get practice statistics
+      operationId: getPracticeStatistics
+      responses: {'200': {$ref: '#/components/responses/Statistics'}, '400': {$ref: '#/components/responses/Error'}}
+components:
+  securitySchemes:
+    SaToken: {type: apiKey, in: header, name: satoken}
+  parameters:
+    IdempotencyKey: {name: Idempotency-Key, in: header, required: true, schema: {type: string, format: uuid}}
+    IfMatch: {name: If-Match, in: header, required: true, schema: {type: string, pattern: '^"[1-9][0-9]*"$'}}
+    Page: {name: page, in: query, schema: {type: integer, minimum: 1, default: 1}}
+    PageSize: {name: pageSize, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+    Keyword: {name: keyword, in: query, schema: {type: string, maxLength: 128}}
+    CategorySlug: {name: categorySlug, in: query, schema: {$ref: '#/components/schemas/Slug'}}
+    TagSlug: {name: tagSlug, in: query, schema: {$ref: '#/components/schemas/Slug'}}
+    ArticleSort: {name: sort, in: query, schema: {type: string, enum: [RELEVANCE, PUBLISHED_AT], default: PUBLISHED_AT}}
+    Slug: {name: slug, in: path, required: true, schema: {$ref: '#/components/schemas/Slug'}}
+    CredentialId: {name: credentialId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    ArticleId: {name: articleId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    CategoryId: {name: categoryId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    TagId: {name: tagId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    RevisionId: {name: revisionId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    FileId: {name: fileId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    TaskId: {name: taskId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    TreeId: {name: treeId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    NodeKey: {name: nodeKey, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    NodeKeyQuery: {name: nodeKey, in: query, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    ConversationId: {name: conversationId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    LibraryId: {name: libraryId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    ImportId: {name: importId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    QuestionId: {name: questionId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+    SessionId: {name: sessionId, in: path, required: true, schema: {$ref: '#/components/schemas/Ulid'}}
+  requestBodies:
+    RegisterRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/RegisterRequest'}}}}
+    LoginRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/LoginRequest'}}}}
+    EmailCodeRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/EmailCodeRequest'}}}}
+    PasswordResetRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PasswordResetRequest'}}}}
+    PasswordChangeRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PasswordChangeRequest'}}}}
+    UserPatchRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/UserPatchRequest'}}}}
+    CredentialUpsertRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CredentialUpsertRequest'}}}}
+    ArticleUpsertRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/ArticleUpsertRequest'}}}}
+    ArticlePublishRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/ArticlePublishRequest'}}}}
+    CategoryUpsertRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CategoryUpsertRequest'}}}}
+    TagUpsertRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/TagUpsertRequest'}}}}
+    UploadCredentialRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/UploadCredentialRequest'}}}}
+    CreateTreeRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/CreateTreeRequest'}}}}
+    TreeCredentialRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/TreeCredentialRequest'}}}}
+    FollowUpRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/FollowUpRequest'}}}}
+    LibraryCreateRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/LibraryCreateRequest'}}}}
+    LibraryPatchRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/LibraryPatchRequest'}}}}
+    QuestionImportRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/QuestionImportRequest'}}}}
+    QuestionUpsertRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/QuestionUpsertRequest'}}}}
+    PracticeCreateRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PracticeCreateRequest'}}}}
+    PracticeAnswerRequest: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PracticeAnswerRequest'}}}}
+  responses:
+    NoContent: {description: Completed without a response body}
+    Empty: {$ref: '#/components/responses/ApiResponse'}
+    Error: {description: Error response, content: {application/json: {schema: {$ref: '#/components/schemas/ErrorResponse'}}}}
+    ApiResponse: {description: Success response, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+    Login: {description: Login session, content: {application/json: {schema: {$ref: '#/components/schemas/LoginResponse'}}}}
+    User: {description: User, headers: {ETag: {$ref: '#/components/headers/ETag'}}, content: {application/json: {schema: {$ref: '#/components/schemas/UserResponse'}}}}
+    Credential: {description: Credential, headers: {ETag: {$ref: '#/components/headers/ETag'}}, content: {application/json: {schema: {$ref: '#/components/schemas/CredentialResponse'}}}}
+    CredentialList: {description: Credentials, content: {application/json: {schema: {$ref: '#/components/schemas/CredentialListResponse'}}}}
+    Article: {description: Article, content: {application/json: {schema: {$ref: '#/components/schemas/ArticleResponse'}}}}
+    ArticleAdmin: {description: Article for administration, headers: {ETag: {$ref: '#/components/headers/ETag'}}, content: {application/json: {schema: {$ref: '#/components/schemas/ArticleAdminResponse'}}}}
+    ArticlePage: {description: Article page, content: {application/json: {schema: {$ref: '#/components/schemas/ArticlePageResponse'}}}}
+    CategoryList: {description: Categories, content: {application/json: {schema: {$ref: '#/components/schemas/CategoryListResponse'}}}}
+    TagList: {description: Tags, content: {application/json: {schema: {$ref: '#/components/schemas/TagListResponse'}}}}
+    CategoryAdmin: {description: Category for administration, headers: {ETag: {$ref: '#/components/headers/ETag'}}, content: {application/json: {schema: {$ref: '#/components/schemas/CategoryAdminResponse'}}}}
+    TagAdmin: {description: Tag for administration, headers: {ETag: {$ref: '#/components/headers/ETag'}}, content: {application/json: {schema: {$ref: '#/components/schemas/TagAdminResponse'}}}}
+    ArchiveList: {description: Archives, content: {application/json: {schema: {$ref: '#/components/schemas/ArchiveListResponse'}}}}
+    RevisionList: {description: Revisions, content: {application/json: {schema: {$ref: '#/components/schemas/RevisionListResponse'}}}}
+    UploadCredential: {description: Upload credential, content: {application/json: {schema: {$ref: '#/components/schemas/UploadCredentialResponse'}}}}
+    FileObject: {description: File object, content: {application/json: {schema: {$ref: '#/components/schemas/FileObjectResponse'}}}}
+    DownloadUrl: {description: Download URL, content: {application/json: {schema: {$ref: '#/components/schemas/DownloadUrlResponse'}}}}
+    TaskAccepted: {description: Task accepted, content: {application/json: {schema: {$ref: '#/components/schemas/TaskAcceptedResponse'}}}}
+    Task: {description: Task, content: {application/json: {schema: {$ref: '#/components/schemas/TaskResponse'}}}}
+    Tree: {description: Tree, headers: {ETag: {$ref: '#/components/headers/ETag'}}, content: {application/json: {schema: {$ref: '#/components/schemas/TreeResponse'}}}}
+    TreePage: {description: Tree page, content: {application/json: {schema: {$ref: '#/components/schemas/TreePageResponse'}}}}
+    NodeContent: {description: Node content, content: {application/json: {schema: {$ref: '#/components/schemas/NodeContentResponse'}}}}
+    FollowUpAccepted: {description: Follow-up accepted, content: {application/json: {schema: {$ref: '#/components/schemas/FollowUpAcceptedResponse'}}}}
+    ConversationList: {description: Conversations, content: {application/json: {schema: {$ref: '#/components/schemas/ConversationListResponse'}}}}
+    MessagePage: {description: Message page, content: {application/json: {schema: {$ref: '#/components/schemas/MessagePageResponse'}}}}
+    Library: {description: Library, headers: {ETag: {$ref: '#/components/headers/ETag'}}, content: {application/json: {schema: {$ref: '#/components/schemas/LibraryResponse'}}}}
+    LibraryList: {description: Libraries, content: {application/json: {schema: {$ref: '#/components/schemas/LibraryListResponse'}}}}
+    QuestionImport: {description: Import, content: {application/json: {schema: {$ref: '#/components/schemas/QuestionImportResponse'}}}}
+    Question: {description: Question, headers: {ETag: {$ref: '#/components/headers/ETag'}}, content: {application/json: {schema: {$ref: '#/components/schemas/QuestionResponse'}}}}
+    QuestionPage: {description: Question page, content: {application/json: {schema: {$ref: '#/components/schemas/QuestionPageResponse'}}}}
+    Practice: {description: Practice session, content: {application/json: {schema: {$ref: '#/components/schemas/PracticeResponse'}}}}
+    PracticePage: {description: Practice page, content: {application/json: {schema: {$ref: '#/components/schemas/PracticePageResponse'}}}}
+    PracticeQuestion: {description: Practice question, content: {application/json: {schema: {$ref: '#/components/schemas/PracticeQuestionResponse'}}}}
+    PracticeAnswer: {description: Practice answer, content: {application/json: {schema: {$ref: '#/components/schemas/PracticeAnswerResponse'}}}}
+    Statistics: {description: Statistics, content: {application/json: {schema: {$ref: '#/components/schemas/StatisticsResponse'}}}}
+  headers:
+    ETag: {schema: {type: string, pattern: '^"[1-9][0-9]*"$'}, description: New aggregate version}
+  schemas:
+    Ulid: {type: string, pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'}
+    Slug: {type: string, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$', maxLength: 128}
+    ApiResponse: {type: object, required: [code, message, data, traceId], properties: {code: {const: 0}, message: {const: OK}, data: {}, traceId: {type: string}}}
+    ErrorResponse: {type: object, required: [code, message, traceId], properties: {code: {type: string}, message: {type: string}, data: {type: 'null'}, traceId: {type: string}}}
+    RegisterRequest: {type: object, additionalProperties: false, required: [username, email, emailCode, password], properties: {username: {type: string, minLength: 8, maxLength: 64}, email: {type: string, format: email}, emailCode: {type: string, pattern: '^\\d{6}$'}, password: {type: string, minLength: 8, maxLength: 128}}}
+    LoginRequest: {type: object, additionalProperties: false, required: [account, password], properties: {account: {type: string, minLength: 1, maxLength: 128}, password: {type: string, minLength: 8, maxLength: 128}}}
+    EmailCodeRequest: {type: object, additionalProperties: false, required: [email, purpose], properties: {email: {type: string, format: email}, purpose: {type: string, enum: [REGISTER, PASSWORD_RESET]}}}
+    PasswordResetRequest: {type: object, additionalProperties: false, required: [email, emailCode, newPassword], properties: {email: {type: string, format: email}, emailCode: {type: string, pattern: '^\\d{6}$'}, newPassword: {type: string, minLength: 8, maxLength: 128}}}
+    PasswordChangeRequest: {type: object, additionalProperties: false, required: [oldPassword, newPassword], properties: {oldPassword: {type: string, minLength: 8, maxLength: 128}, newPassword: {type: string, minLength: 8, maxLength: 128}}}
+    UserPatchRequest: {type: object, additionalProperties: false, minProperties: 1, properties: {nickname: {type: string, minLength: 1, maxLength: 64}, avatarFileId: {$ref: '#/components/schemas/Ulid'}, preferences: {type: object, additionalProperties: false, properties: {defaultPracticeMode: {type: string, enum: [MEMORIZE, EXAM]}}}}}
+    CredentialUpsertRequest: {type: object, additionalProperties: false, required: [providerCode, model, apiKey], properties: {providerCode: {type: string, enum: [DEEPSEEK, DASHSCOPE]}, model: {type: string, minLength: 1, maxLength: 128}, apiKey: {type: string, minLength: 1, maxLength: 512}}}
+    ArticleUpsertRequest: {type: object, additionalProperties: false, required: [articleType, slug, title, summary, contentMd, categoryIds, tagIds], properties: {articleType: {type: string, enum: [ARTICLE, PAGE]}, slug: {$ref: '#/components/schemas/Slug'}, title: {type: string, minLength: 1, maxLength: 128}, summary: {type: string, maxLength: 500}, coverFileId: {oneOf: [{$ref: '#/components/schemas/Ulid'}, {type: 'null'}]}, contentMd: {type: string, maxLength: 102400}, categoryIds: {type: array, maxItems: 5, uniqueItems: true, items: {$ref: '#/components/schemas/Ulid'}}, tagIds: {type: array, maxItems: 20, uniqueItems: true, items: {$ref: '#/components/schemas/Ulid'}}, changeNote: {type: string, maxLength: 500}}}
+    ArticlePublishRequest: {type: object, additionalProperties: false, properties: {scheduledAt: {type: string, format: date-time}}}
+    CategoryUpsertRequest: {type: object, additionalProperties: false, required: [name, slug, sortOrder, status], properties: {name: {type: string, minLength: 1, maxLength: 128}, slug: {$ref: '#/components/schemas/Slug'}, description: {type: string, maxLength: 500}, sortOrder: {type: integer, minimum: 0}, status: {type: string, enum: [ACTIVE, ARCHIVED]}}}
+    TagUpsertRequest: {type: object, additionalProperties: false, required: [name, slug, status], properties: {name: {type: string, minLength: 1, maxLength: 128}, slug: {$ref: '#/components/schemas/Slug'}, status: {type: string, enum: [ACTIVE, ARCHIVED]}}}
+    UploadCredentialRequest: {type: object, additionalProperties: false, required: [purpose, fileName, contentType, size, sha256], properties: {purpose: {type: string, enum: [ARTICLE_CONTENT_ASSET, QUESTION_MINERU_ARCHIVE]}, fileName: {type: string, minLength: 1, maxLength: 255}, contentType: {type: string, maxLength: 128}, size: {type: integer, minimum: 1, maximum: 31457280}, sha256: {type: string, pattern: '^[a-fA-F0-9]{64}$'}}}
+    CreateTreeRequest: {type: object, additionalProperties: false, required: [title, originalQuestion, credentialId, language], properties: {title: {type: string, minLength: 1, maxLength: 128}, originalQuestion: {type: string, minLength: 1, maxLength: 8192}, credentialId: {$ref: '#/components/schemas/Ulid'}, language: {type: string, enum: [zh-CN, en-US]}}}
+    TreeCredentialRequest: {type: object, additionalProperties: false, required: [credentialId], properties: {credentialId: {$ref: '#/components/schemas/Ulid'}}}
+    FollowUpRequest: {type: object, additionalProperties: false, required: [nodeKey, question], properties: {nodeKey: {$ref: '#/components/schemas/Ulid'}, question: {type: string, minLength: 1, maxLength: 8192}}}
+    LibraryCreateRequest: {type: object, additionalProperties: false, required: [name], properties: {name: {type: string, minLength: 1, maxLength: 128}, description: {type: string, maxLength: 500}}}
+    LibraryPatchRequest: {type: object, additionalProperties: false, minProperties: 1, properties: {name: {type: string, minLength: 1, maxLength: 128}, description: {type: string, maxLength: 500}}}
+    QuestionImportRequest: {type: object, additionalProperties: false, required: [fileId, credentialId], properties: {fileId: {$ref: '#/components/schemas/Ulid'}, credentialId: {$ref: '#/components/schemas/Ulid'}}}
+    QuestionOption: {type: object, additionalProperties: false, required: [key, contentMd], properties: {key: {type: string, pattern: '^[A-Z]{1,3}$'}, contentMd: {type: string, minLength: 1, maxLength: 32768}}}
+    Answer: {oneOf: [{$ref: '#/components/schemas/ChoiceAnswer'}, {$ref: '#/components/schemas/JudgeAnswer'}, {$ref: '#/components/schemas/FillBlankAnswer'}, {$ref: '#/components/schemas/EssayAnswer'}]}
+    ChoiceAnswer: {type: object, additionalProperties: false, required: [keys], properties: {keys: {type: array, minItems: 1, uniqueItems: true, items: {type: string, pattern: '^[A-Z]{1,3}$'}}}}
+    JudgeAnswer: {type: object, additionalProperties: false, required: [value], properties: {value: {type: boolean}}}
+    FillBlankAnswer: {type: object, additionalProperties: false, required: [answers], properties: {answers: {type: array, minItems: 1, items: {type: string, minLength: 1, maxLength: 1024}}}}
+    EssayAnswer: {type: object, additionalProperties: false, required: [selfAssessment], properties: {selfAssessment: {type: string, enum: [KNOW, DONT_KNOW]}}}
+    QuestionUpsertRequest:
+      oneOf:
+        - $ref: '#/components/schemas/SingleChoiceQuestionUpsert'
+        - $ref: '#/components/schemas/MultipleChoiceQuestionUpsert'
+        - $ref: '#/components/schemas/JudgeQuestionUpsert'
+        - $ref: '#/components/schemas/FillBlankQuestionUpsert'
+        - $ref: '#/components/schemas/EssayQuestionUpsert'
+      discriminator: {propertyName: type}
+    SingleChoiceQuestionUpsert: {type: object, additionalProperties: false, required: [type, stemMd, options, answer, analysisMd, difficulty, knowledgeTags], properties: {type: {const: SINGLE_CHOICE}, stemMd: {type: string, minLength: 1, maxLength: 102400}, options: {type: array, minItems: 2, uniqueItems: true, items: {$ref: '#/components/schemas/QuestionOption'}}, answer: {type: object, additionalProperties: false, required: [keys], properties: {keys: {type: array, minItems: 1, maxItems: 1, uniqueItems: true, items: {type: string, pattern: '^[A-Z]{1,3}$'}}}}, analysisMd: {type: string, maxLength: 102400}, difficulty: {type: integer, minimum: 1, maximum: 5}, knowledgeTags: {type: array, maxItems: 20, uniqueItems: true, items: {type: string, minLength: 1, maxLength: 64}}}}
+    MultipleChoiceQuestionUpsert: {type: object, additionalProperties: false, required: [type, stemMd, options, answer, analysisMd, difficulty, knowledgeTags], properties: {type: {const: MULTIPLE_CHOICE}, stemMd: {type: string, minLength: 1, maxLength: 102400}, options: {type: array, minItems: 2, uniqueItems: true, items: {$ref: '#/components/schemas/QuestionOption'}}, answer: {$ref: '#/components/schemas/ChoiceAnswer'}, analysisMd: {type: string, maxLength: 102400}, difficulty: {type: integer, minimum: 1, maximum: 5}, knowledgeTags: {type: array, maxItems: 20, uniqueItems: true, items: {type: string, minLength: 1, maxLength: 64}}}}
+    JudgeQuestionUpsert: {type: object, additionalProperties: false, required: [type, stemMd, answer, analysisMd, difficulty, knowledgeTags], properties: {type: {const: JUDGE}, stemMd: {type: string, minLength: 1, maxLength: 102400}, answer: {$ref: '#/components/schemas/JudgeAnswer'}, analysisMd: {type: string, maxLength: 102400}, difficulty: {type: integer, minimum: 1, maximum: 5}, knowledgeTags: {type: array, maxItems: 20, uniqueItems: true, items: {type: string, minLength: 1, maxLength: 64}}}}
+    FillBlankQuestionUpsert: {type: object, additionalProperties: false, required: [type, stemMd, answer, analysisMd, difficulty, knowledgeTags], properties: {type: {const: FILL_BLANK}, stemMd: {type: string, minLength: 1, maxLength: 102400}, answer: {$ref: '#/components/schemas/FillBlankAnswer'}, analysisMd: {type: string, maxLength: 102400}, difficulty: {type: integer, minimum: 1, maximum: 5}, knowledgeTags: {type: array, maxItems: 20, uniqueItems: true, items: {type: string, minLength: 1, maxLength: 64}}}}
+    EssayQuestionUpsert: {type: object, additionalProperties: false, required: [type, stemMd, answer, analysisMd, difficulty, knowledgeTags], properties: {type: {const: ESSAY}, stemMd: {type: string, minLength: 1, maxLength: 102400}, answer: {$ref: '#/components/schemas/EssayAnswer'}, analysisMd: {type: string, maxLength: 102400}, difficulty: {type: integer, minimum: 1, maximum: 5}, knowledgeTags: {type: array, maxItems: 20, uniqueItems: true, items: {type: string, minLength: 1, maxLength: 64}}}}
+    PracticeCreateRequest: {type: object, additionalProperties: false, required: [scope, libraryIds, mode, questionTypes, questionCount, order], properties: {scope: {type: string, enum: [SELECTED_LIBRARIES, ALL_MY_LIBRARIES]}, libraryIds: {type: array, maxItems: 100, uniqueItems: true, items: {$ref: '#/components/schemas/Ulid'}}, mode: {type: string, enum: [MEMORIZE, EXAM]}, questionTypes: {type: array, minItems: 1, uniqueItems: true, items: {type: string, enum: [SINGLE_CHOICE, MULTIPLE_CHOICE, JUDGE, FILL_BLANK, ESSAY]}}, questionCount: {type: integer, minimum: 1, maximum: 100}, order: {type: string, enum: [RANDOM, SEQUENTIAL]}}}
+    PracticeAnswerRequest: {type: object, additionalProperties: false, required: [questionSnapshotId, answer], properties: {questionSnapshotId: {$ref: '#/components/schemas/Ulid'}, answer: {$ref: '#/components/schemas/Answer'}}}
+    # Response data definitions use an object to keep the API envelope explicit; fields are stable and additive only.
+    LoginResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/Login'}}}]}
+    UserResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/User'}}}]}
+    CredentialResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/Credential'}}}]}
+    CredentialListResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {type: array, items: {$ref: '#/components/schemas/Credential'}}}}]}
+    ArticleResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/Article'}}}]}
+    ArticleAdminResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/ArticleAdmin'}}}]}
+    ArticlePageResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/ArticlePage'}}}]}
+    CategoryListResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {type: array, items: {$ref: '#/components/schemas/Category'}}}}]}
+    TagListResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {type: array, items: {$ref: '#/components/schemas/Tag'}}}}]}
+    CategoryAdminResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/CategoryAdmin'}}}]}
+    TagAdminResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/TagAdmin'}}}]}
+    ArchiveListResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {type: array, items: {$ref: '#/components/schemas/Archive'}}}}]}
+    RevisionListResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {type: array, items: {$ref: '#/components/schemas/Revision'}}}}]}
+    UploadCredentialResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/UploadCredential'}}}]}
+    FileObjectResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/FileObject'}}}]}
+    DownloadUrlResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/DownloadUrl'}}}]}
+    TaskAcceptedResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/TaskAccepted'}}}]}
+    TaskResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/Task'}}}]}
+    TreeResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/Tree'}}}]}
+    TreePageResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/TreePage'}}}]}
+    NodeContentResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/NodeContent'}}}]}
+    FollowUpAcceptedResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/FollowUpAccepted'}}}]}
+    ConversationListResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {type: array, items: {$ref: '#/components/schemas/Conversation'}}}}]}
+    MessagePageResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/MessagePage'}}}]}
+    LibraryResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/Library'}}}]}
+    LibraryListResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {type: array, items: {$ref: '#/components/schemas/Library'}}}}]}
+    QuestionImportResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/QuestionImport'}}}]}
+    QuestionResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/QuestionAdmin'}}}]}
+    QuestionPageResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/QuestionAdminPage'}}}]}
+    PracticeResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/Practice'}}}]}
+    PracticePageResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/PracticePage'}}}]}
+    PracticeQuestionResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/PracticeQuestion'}}}]}
+    PracticeAnswerResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/PracticeAnswer'}}}]}
+    StatisticsResponse: {allOf: [{$ref: '#/components/schemas/ApiResponse'}, {properties: {data: {$ref: '#/components/schemas/Statistics'}}}]}
+    Login: {type: object, required: [token, user], properties: {token: {type: string}, user: {$ref: '#/components/schemas/User'}}}
+    User: {type: object, required: [id, username, email, nickname, permissions, version], properties: {id: {$ref: '#/components/schemas/Ulid'}, username: {type: string}, email: {type: string, format: email}, emailVerifiedAt: {type: [string, 'null'], format: date-time}, nickname: {type: string}, avatarFileId: {oneOf: [{$ref: '#/components/schemas/Ulid'}, {type: 'null'}]}, permissions: {type: array, items: {type: string}}, version: {type: integer, minimum: 1}}}
+    Credential: {type: object, required: [id, providerCode, model, keyFingerprintSuffix, status, version], properties: {id: {$ref: '#/components/schemas/Ulid'}, providerCode: {type: string, enum: [DEEPSEEK, DASHSCOPE]}, model: {type: string}, keyFingerprintSuffix: {type: string}, status: {type: string, enum: [VERIFYING, VERIFIED, FAILED, REVOKED]}, verifiedAt: {type: [string, 'null'], format: date-time}, lastUsedAt: {type: [string, 'null'], format: date-time}, version: {type: integer, minimum: 1}}}
+    Article: {type: object, required: [id, slug, title, summary, contentMd, toc, currentRevisionNo], properties: {id: {$ref: '#/components/schemas/Ulid'}, slug: {$ref: '#/components/schemas/Slug'}, title: {type: string}, summary: {type: string}, coverFileId: {oneOf: [{$ref: '#/components/schemas/Ulid'}, {type: 'null'}]}, categories: {type: array, items: {$ref: '#/components/schemas/Category'}}, tags: {type: array, items: {$ref: '#/components/schemas/Tag'}}, contentMd: {type: string}, toc: {type: array, items: {type: object}}, currentRevisionNo: {type: integer}, publishedAt: {type: string, format: date-time}, readingMinutes: {type: integer, minimum: 1}, favoriteCount: {type: integer, minimum: 0}, isFavorited: {type: boolean}}}
+    ArticleAdmin: {allOf: [{$ref: '#/components/schemas/Article'}, {required: [status, version], properties: {status: {type: string, enum: [DRAFT, SCHEDULED, PUBLISHED, OFFLINE, ARCHIVED]}, scheduledAt: {type: [string, 'null'], format: date-time}, version: {type: integer, minimum: 1}}}]}
+    ArticleSummary: {type: object, required: [id, slug, title, summary, categories, tags, publishedAt, readingMinutes, favoriteCount, isFavorited], properties: {id: {$ref: '#/components/schemas/Ulid'}, slug: {$ref: '#/components/schemas/Slug'}, title: {type: string}, summary: {type: string}, coverFileId: {oneOf: [{$ref: '#/components/schemas/Ulid'}, {type: 'null'}]}, categories: {type: array, items: {$ref: '#/components/schemas/Category'}}, tags: {type: array, items: {$ref: '#/components/schemas/Tag'}}, publishedAt: {type: string, format: date-time}, readingMinutes: {type: integer, minimum: 1}, favoriteCount: {type: integer, minimum: 0}, isFavorited: {type: boolean}}}
+    ArticlePage: {type: object, required: [items, page, pageSize, total], properties: {items: {type: array, items: {$ref: '#/components/schemas/ArticleSummary'}}, page: {type: integer}, pageSize: {type: integer}, total: {type: integer}}}
+    Category: {type: object, required: [id, name, slug, articleCount], properties: {id: {$ref: '#/components/schemas/Ulid'}, name: {type: string}, slug: {$ref: '#/components/schemas/Slug'}, articleCount: {type: integer, minimum: 0}}}
+    Tag: {type: object, required: [id, name, slug, articleCount], properties: {id: {$ref: '#/components/schemas/Ulid'}, name: {type: string}, slug: {$ref: '#/components/schemas/Slug'}, articleCount: {type: integer, minimum: 0}}}
+    CategoryAdmin: {type: object, required: [id, name, slug, sortOrder, status, version], properties: {id: {$ref: '#/components/schemas/Ulid'}, name: {type: string}, slug: {$ref: '#/components/schemas/Slug'}, description: {type: string}, sortOrder: {type: integer}, status: {type: string, enum: [ACTIVE, ARCHIVED]}, version: {type: integer, minimum: 1}}}
+    TagAdmin: {type: object, required: [id, name, slug, status, version], properties: {id: {$ref: '#/components/schemas/Ulid'}, name: {type: string}, slug: {$ref: '#/components/schemas/Slug'}, status: {type: string, enum: [ACTIVE, ARCHIVED]}, version: {type: integer, minimum: 1}}}
+    Archive: {type: object, required: [yearMonth, articleCount], properties: {yearMonth: {type: string, pattern: '^\\d{4}-\\d{2}$'}, articleCount: {type: integer, minimum: 0}}}
+    Revision: {type: object, required: [id, revisionNo, createdAt], properties: {id: {$ref: '#/components/schemas/Ulid'}, revisionNo: {type: integer}, changeNote: {type: string}, createdAt: {type: string, format: date-time}}}
+    UploadCredential: {type: object, required: [fileId, uploadUrl, requiredHeaders, expiresAt], properties: {fileId: {$ref: '#/components/schemas/Ulid'}, uploadUrl: {type: string, format: uri}, requiredHeaders: {type: object, additionalProperties: {type: string}}, expiresAt: {type: string, format: date-time}}}
+    FileObject: {type: object, required: [id, originalName, contentType, size, sha256, purpose, status], properties: {id: {$ref: '#/components/schemas/Ulid'}, originalName: {type: string}, contentType: {type: string}, size: {type: integer}, sha256: {type: string}, purpose: {type: string}, status: {type: string}}}
+    DownloadUrl: {type: object, required: [url, expiresAt], properties: {url: {type: string, format: uri}, expiresAt: {type: string, format: date-time}}}
+    TaskAccepted: {type: object, required: [taskId, status, resourceType, resourceId], properties: {taskId: {$ref: '#/components/schemas/Ulid'}, status: {const: PENDING}, resourceType: {type: string}, resourceId: {$ref: '#/components/schemas/Ulid'}}}
+    Task: {type: object, required: [taskId, taskType, status, progress, resourceType, resourceId], properties: {taskId: {$ref: '#/components/schemas/Ulid'}, taskType: {type: string, enum: [LEARNING_TREE_GENERATE, LEARNING_FOLLOW_UP, QUESTION_IMPORT]}, status: {type: string, enum: [PENDING, RUNNING, SUCCEEDED, FAILED, CANCELLED]}, progress: {type: integer, minimum: 0, maximum: 100}, resourceType: {type: string}, resourceId: {$ref: '#/components/schemas/Ulid'}, errorCode: {type: [string, 'null']}, errorMessage: {type: [string, 'null']}, startedAt: {type: [string, 'null'], format: date-time}, finishedAt: {type: [string, 'null'], format: date-time}}}
+    Tree: {type: object, required: [treeId, rootNodeKey, nodes], properties: {treeId: {$ref: '#/components/schemas/Ulid'}, rootNodeKey: {$ref: '#/components/schemas/Ulid'}, nodes: {type: array, items: {$ref: '#/components/schemas/TreeNode'}}}}
+    TreeNode: {type: object, required: [nodeKey, depth, sortOrder, title, directContentMd, childrenCount, isLeaf, followUpAllowed], properties: {nodeKey: {$ref: '#/components/schemas/Ulid'}, parentNodeKey: {oneOf: [{$ref: '#/components/schemas/Ulid'}, {type: 'null'}]}, depth: {type: integer, minimum: 1}, sortOrder: {type: integer, minimum: 1}, title: {type: string}, directContentMd: {type: string}, childrenCount: {type: integer, minimum: 0}, isLeaf: {type: boolean}, followUpAllowed: {type: boolean}}}
+    TreePage: {type: object, required: [items, page, pageSize, total], properties: {items: {type: array, items: {$ref: '#/components/schemas/TreeSummary'}}, page: {type: integer}, pageSize: {type: integer}, total: {type: integer}}}
+    TreeSummary: {type: object, required: [id, title, language, status, pendingTaskId, updatedAt], properties: {id: {$ref: '#/components/schemas/Ulid'}, title: {type: string}, language: {type: string}, status: {type: string, enum: [PENDING, READY, FAILED]}, pendingTaskId: {oneOf: [{$ref: '#/components/schemas/Ulid'}, {type: 'null'}], description: 'Creation task ID while PENDING or FAILED; null when READY.'}, updatedAt: {type: string, format: date-time}}}
+    NodeContent: {type: object, required: [treeId, nodeKey, title, path, isLeaf, followUpAllowed, displayScope, displayMd], properties: {treeId: {$ref: '#/components/schemas/Ulid'}, nodeKey: {$ref: '#/components/schemas/Ulid'}, title: {type: string}, path: {type: array, items: {type: object, required: [nodeKey, title], properties: {nodeKey: {$ref: '#/components/schemas/Ulid'}, title: {type: string}}}}, isLeaf: {type: boolean}, followUpAllowed: {type: boolean}, displayScope: {type: string, enum: [DIRECT, SUBTREE]}, displayMd: {type: string}}}
+    FollowUpAccepted: {type: object, required: [conversationId, task], properties: {conversationId: {$ref: '#/components/schemas/Ulid'}, task: {$ref: '#/components/schemas/TaskAccepted'}}}
+    Conversation: {type: object, required: [id, treeId, nodeKey, status], properties: {id: {$ref: '#/components/schemas/Ulid'}, treeId: {$ref: '#/components/schemas/Ulid'}, nodeKey: {$ref: '#/components/schemas/Ulid'}, status: {type: string}}}
+    MessagePage: {type: object, required: [items, page, pageSize, total], properties: {items: {type: array, items: {$ref: '#/components/schemas/ConversationMessage'}}, page: {type: integer}, pageSize: {type: integer}, total: {type: integer}}}
+    ConversationMessage: {type: object, required: [id, seqNo, role, contentMd, status, createdAt], properties: {id: {$ref: '#/components/schemas/Ulid'}, seqNo: {type: integer}, role: {type: string, enum: [USER, ASSISTANT]}, contentMd: {type: string}, status: {type: string}, createdAt: {type: string, format: date-time}}}
+    Library: {type: object, required: [id, name, libraryType, status, questionCount, version, updatedAt], properties: {id: {$ref: '#/components/schemas/Ulid'}, name: {type: string}, description: {type: string}, libraryType: {type: string, enum: [NORMAL, WRONG_QUESTION]}, status: {type: string}, questionCount: {type: integer, minimum: 0}, version: {type: integer}, updatedAt: {type: string, format: date-time}}}
+    QuestionImport: {type: object, required: [id, libraryId, taskId, status, totalCount, successCount, failedCount], properties: {id: {$ref: '#/components/schemas/Ulid'}, libraryId: {$ref: '#/components/schemas/Ulid'}, taskId: {$ref: '#/components/schemas/Ulid'}, status: {type: string}, totalCount: {type: integer}, successCount: {type: integer}, failedCount: {type: integer}}}
+    Question: {type: object, required: [id, type, stemMd, analysisMd, difficulty, knowledgeTags, status, version], properties: {id: {$ref: '#/components/schemas/Ulid'}, type: {type: string}, stemMd: {type: string}, options: {type: array, items: {$ref: '#/components/schemas/QuestionOption'}}, analysisMd: {type: string}, difficulty: {type: integer}, knowledgeTags: {type: array, items: {type: string}}, status: {type: string}, version: {type: integer}}}
+    QuestionAdmin: {allOf: [{$ref: '#/components/schemas/Question'}, {required: [answer], properties: {answer: {$ref: '#/components/schemas/Answer'}}}]}
+    QuestionAdminPage: {type: object, required: [items, page, pageSize, total], properties: {items: {type: array, items: {$ref: '#/components/schemas/QuestionAdmin'}}, page: {type: integer}, pageSize: {type: integer}, total: {type: integer}}}
+    Practice: {type: object, required: [id, mode, status, questionCount, answeredCount, correctCount, startedAt], properties: {id: {$ref: '#/components/schemas/Ulid'}, mode: {type: string, enum: [MEMORIZE, EXAM]}, status: {type: string}, questionCount: {type: integer}, answeredCount: {type: integer}, correctCount: {type: integer}, startedAt: {type: string, format: date-time}, completedAt: {type: [string, 'null'], format: date-time}}}
+    PracticePage: {type: object, required: [items, page, pageSize, total], properties: {items: {type: array, items: {$ref: '#/components/schemas/Practice'}}, page: {type: integer}, pageSize: {type: integer}, total: {type: integer}}}
+    PracticeQuestion: {oneOf: [{$ref: '#/components/schemas/PracticeQuestionExam'}, {$ref: '#/components/schemas/PracticeQuestionMemorize'}]}
+    PracticeQuestionExam: {type: object, required: [mode, questionSnapshotId, sequenceNo, question], properties: {mode: {const: EXAM}, questionSnapshotId: {$ref: '#/components/schemas/Ulid'}, sequenceNo: {type: integer}, question: {$ref: '#/components/schemas/PracticeQuestionItem'}}}
+    PracticeQuestionMemorize: {type: object, required: [mode, questionSnapshotId, sequenceNo, question, correctAnswer, analysisMd], properties: {mode: {const: MEMORIZE}, questionSnapshotId: {$ref: '#/components/schemas/Ulid'}, sequenceNo: {type: integer}, question: {$ref: '#/components/schemas/PracticeQuestionItem'}, correctAnswer: {$ref: '#/components/schemas/Answer'}, analysisMd: {type: string}}}
+    PracticeQuestionItem: {type: object, required: [id, type, stemMd], properties: {id: {$ref: '#/components/schemas/Ulid'}, type: {type: string}, stemMd: {type: string}, options: {type: array, items: {$ref: '#/components/schemas/QuestionOption'}}}}
+    PracticeAnswer: {type: object, required: [result, correctAnswer, analysisMd, wrongLibrary], properties: {result: {type: string, enum: [CORRECT, INCORRECT, DONT_KNOW, NOT_MASTERED]}, correctAnswer: {$ref: '#/components/schemas/Answer'}, analysisMd: {type: string}, wrongLibrary: {type: object, required: [libraryId, containsQuestion], properties: {libraryId: {$ref: '#/components/schemas/Ulid'}, containsQuestion: {type: boolean}}}}}
+    Statistics: {type: object, properties: {masteryLevel: {type: object, additionalProperties: {type: integer}}, correctRate: {type: number}, wrongQuestionCount: {type: integer}}}

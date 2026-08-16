@@ -1,0 +1,28 @@
+# 所有 TODO_* 均为部署时必须通过环境变量填写的项目；不得在仓库中放入真实凭据。
+server:
+  port: ${SERVER_PORT:8082} # TODO: content-service 端口
+spring:
+  application.name: content-service
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/hengxue_content?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC} # TODO: 服务私有数据库
+    username: ${DB_USERNAME:root} # TODO: 数据库账号
+    password: ${DB_PASSWORD:} # TODO: 数据库密码
+  data.redis:
+    host: ${REDIS_HOST:127.0.0.1} # TODO: Redis 主机
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:} # TODO: Redis 密码
+  cloud.nacos:
+    username: ${NACOS_USERNAME:nacos} # TODO: Nacos 用户名
+    password: ${NACOS_PASSWORD:nacos} # TODO: Nacos 密码
+    discovery:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848} # TODO: Nacos 地址
+      namespace: ${NACOS_NAMESPACE:local} # TODO: namespace ID
+      group: ${NACOS_GROUP:DEFAULT_GROUP}
+  config.import: optional:nacos:${spring.application.name}.yaml?group=${NACOS_GROUP:DEFAULT_GROUP}&refreshEnabled=true
+dubbo:
+  application.name: ${spring.application.name}
+  registry.address: nacos://${NACOS_SERVER_ADDR:127.0.0.1:8848}?namespace=${NACOS_NAMESPACE:local} # TODO: 注册中心
+  protocol:
+    name: tri
+    port: ${DUBBO_PORT:20882} # TODO: Dubbo 端口
+management.endpoints.web.exposure.include: health,info,prometheus

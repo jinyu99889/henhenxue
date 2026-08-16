@@ -27,27 +27,28 @@ React SPA
     |
 Spring Cloud Gateway (Sa-Token, rate limit, request id)
     |
-    +-- auth-service       登录、身份、角色和令牌
-    +-- user-service       用户资料、偏好
+    +-- auth-service       登录、身份、角色、令牌、用户资料和偏好
     +-- content-service    博客文章、分类、标签、收藏
-    +-- learning-service   知识树、版本、节点、学习对话
+    +-- learning-service   知识树、节点、学习对话
     +-- question-service   题库、题目、导入、练习与统计
     +-- file-service       MinIO 上传凭证、对象元数据、下载授权
-    +-- ai-service         AgentScope、模型路由、Prompt 模板、AI 任务
+    +-- ai-service         AgentScope、模型路由、Prompt 模板、统一异步任务
 
 Nacos / Sentinel / MySQL / Redis / MinIO / RocketMQ / XXL-JOB
 ```
 
 采用 Maven 多模块单仓库：`common-*`（异常、响应、审计、序列化）、`api-*`（Dubbo DTO/接口）、各服务应用。禁止把 JPA/MyBatis Entity 放入 `api-*`；跨服务只传 DTO 与稳定枚举。
 
-第一期可用 `content-service`、`learning-service`、`question-service`、`file-service`、`ai-service` 五个业务服务启动，用户和认证先合并为 `auth-service`。服务边界保持不变，后续可拆 `user-service`，不改变 API 前缀或数据归属。
+第一期可用 `content-service`、`learning-service`、`question-service`、`file-service`、`ai-service` 五个业务服务启动，用户和认证先合并为 `auth-service`。第一期永久使用一个 MySQL schema `hengxue`；领域表按服务归属写入，统一平台表 `sys_outbox_event`、`sys_idempotency_record` 和 `sys_async_task` 由受控服务接口写入，并通过服务类型字段区分来源。不设计按服务垂直拆库。
 
 ## 3. 调用与一致性原则
 
 - 浏览、写入等同步请求走 Gateway HTTP API；业务服务之间的实时查询优先 Dubbo。
-- AI 任务和 MinerU ZIP 导入由 HTTP 创建，后台消费执行，进度通过 SSE 推送。
-- 每个服务只写自己的 schema/数据库表；严禁跨服务直接写表。
-- 对“已提交的数据库事务需要发消息”的场景写入 `sys_outbox_event`，由投递器可靠发送至 RocketMQ；消费者按事件 ID 去重。
+- AI 任务和 MinerU ZIP 导入由 HTTP 创建，后台消费执行，前端通过 `GET /tasks/{taskId}` 轮询状态。`treeId`、`importId` 等是业务资源 ID；`taskId` 是一次后台执行实例的 ID，二者不得混用。
+- `sys_async_task` 是一期合库的受控共享任务平台表：源服务在同一本地事务内写入业务资源的 `PENDING` 状态、统一幂等记录、任务行和统一 Outbox（`producer_service` 标记发起服务）的 `async.task.requested` 事件。消费者收到消息后先完成必要的幂等登记再返回 MQ ACK；ACK 只表示消息已被接受，不表示业务处理成功。消费者执行完成后发布 `async.task.succeeded` 或 `async.task.failed` 结果事件，源服务按 `taskId` 幂等消费，并在本地事务内写入领域结果和任务终态。技术性落库失败应重试；确定性业务校验失败才发布失败事件。统一 Outbox 补投及非终态任务扫描负责补偿未消费事件。
+- `async.task.requested` 的消息体固定为 `AsyncTaskRequestedV1 { eventId, taskId, taskType, requesterUserId, commandVersion }`。消息只用于唤醒和去重；`ai-service` 按 `taskId` 读取任务的不可变 `command_json`，校验 `taskType`、`commandVersion` 和发起人后执行。`command_json` 不是通用扩展字段，而是受版本控制的执行命令：`LEARNING_TREE_GENERATE` 必含 `treeId`、`title`、`originalQuestion`、`language`、`credentialId`；`LEARNING_FOLLOW_UP` 必含 `treeId`、`conversationId`、`nodeKey`、`question`、`credentialId`；`QUESTION_IMPORT` 必含 `importId`、`libraryId`、`archiveFileId`、`credentialId`。所有命令均不得含 API Key、密文或任意客户端透传配置。新增字段或语义时递增 `commandVersion`，旧版本执行器在下线前继续兼容。
+- 每个服务只写自己归属的领域表；严禁跨服务直接写领域表。统一平台表通过 `producer_service`/`owner_service` 标记写入者，由应用权限和事务边界校验。第一期不建立跨服务外键。
+- 对“已提交的数据库事务需要发消息”的场景写入统一 `sys_outbox_event`，由投递器可靠发送至 RocketMQ；唯一键为 `(producer_service, topic, event_key)`，消费者按事件 ID 去重。
 - RocketMQ 事务消息仅在生产者本地事务与消息半消息协调确有必要时使用。它不能解决两个业务服务的强一致提交。
 - 博客搜索第一期使用 MySQL InnoDB FULLTEXT 索引，不引入 Elasticsearch；仅检索当前已发布文章的最新版本。MySQL 启动配置设为 `ngram_token_size=2`，全文索引显式使用 `WITH PARSER ngram` 以支持中文检索。
 
@@ -57,11 +58,11 @@ Nacos / Sentinel / MySQL / Redis / MinIO / RocketMQ / XXL-JOB
 
 校验成功后，API Key 使用信封加密保存：业务数据库仅保存密文、KMS/环境注入的主密钥标识和 Key 指纹；仅 `ai-service` 在实际调用的短生命周期内解密。接口只返回脱敏后的末四位和验证状态，管理员、审计日志、异常信息和消息体不得包含明文 Key。
 
-`learning-service` 将受控的任务参数和 `credentialId` 传给 `ai-service`，不直接依赖模型 SDK。知识树创建时保存用户选定的默认凭据，叶子节点追问默认使用该凭据；用户可在树设置中切换。题库 MinerU ZIP 导入必须显式提供凭据。每个 AI 任务只能使用任务发起用户拥有且处于 `VERIFIED` 状态的凭据；任务记录保存凭据 ID 和指纹快照用于审计，绝不保存密钥。DeepSeek 使用其 OpenAI 兼容聊天接口；DashScope 使用其 Java SDK/官方聊天接口，两者在 `ai-service` 内被统一为流式聊天能力。
+`learning-service` 和 `question-service` 通过上述版本化任务命令将受控参数和 `credentialId` 交给 `ai-service`，不直接依赖模型 SDK。知识树创建时保存用户选定的默认凭据，叶子节点追问默认使用该凭据；用户可在树设置中切换。题库 MinerU ZIP 导入必须显式提供凭据。每个 AI 任务只能使用任务发起用户拥有且处于 `VERIFIED` 状态的凭据；统一任务记录保存凭据 ID 和指纹快照用于审计，绝不保存密钥。DeepSeek 使用其 OpenAI 兼容聊天接口；DashScope 使用其 Java SDK/官方聊天接口，两者在 `ai-service` 内被统一为流式聊天能力。
 
 AI 调用只对连接超时、HTTP 429 和提供商 5xx 进行最多两次指数退避重试；认证失败、模型不存在、余额不足、参数校验失败和已经收到流式内容后的异常均不重试。重试耗尽后任务失败并向用户反馈，不自动切换到其他凭据或模型。
 
-AgentScope Java 的生产调用应复用单例 Agent，通过 `RuntimeContext(userId, sessionId)` 隔离并发会话；WebFlux 链路保持响应式，业务服务中不调用阻塞式 `.block()`。学习树生成、叶子节点追问和题目解析分别使用不同的系统 Prompt、工具权限和 Token 上限。追问提交前，`learning-service` 必须以请求的 `versionId` 查询节点，并确认该节点不存在子节点；根节点或非叶子节点直接返回业务错误，不创建会话、AI 任务或 RocketMQ 消息。
+AgentScope Java 的生产调用应复用单例 Agent，通过 `RuntimeContext(userId, sessionId)` 隔离并发会话；WebFlux 链路保持响应式，业务服务中不调用阻塞式 `.block()`。学习树生成、叶子节点追问和题目解析分别使用不同的系统 Prompt、工具权限和 Token 上限。追问提交前，`learning-service` 必须查询节点并确认该节点不存在子节点；根节点或非叶子节点直接返回业务错误，不创建会话、AI 任务或 RocketMQ 消息。
 
 模型输出必须同时通过以下校验：
 
@@ -84,24 +85,26 @@ AgentScope Java 的生产调用应复用单例 Agent，通过 `RuntimeContext(us
 - 密码使用 Argon2id 或 BCrypt，不记录令牌、密码、完整 Prompt 中的敏感个人信息到日志。
 - 账号密码登录；注册与密码重置请求必须携带邮箱验证码。验证码存 Redis 并设置短 TTL、单次消费和按邮箱/IP 限流。管理员初始化数据仅由数据库迁移/受控运维脚本写入，不提供公共角色授予接口。
 - RBAC 使用“用户-角色-权限”模型：Gateway 路由和服务方法均按权限码校验，`ADMIN` 角色只是在初始化时被授予完整后台权限的预置角色。
-- 修改操作携带 `Idempotency-Key`，AI/导入创建接口以用户和键去重。
+- 对创建异步任务、注册、发布、下架、版本激活、提交答案和完成练习等非幂等写操作，前端必须生成并携带 UUID 格式 `Idempotency-Key`；网络重试必须复用原键。服务端以统一表的 `(owner_service, requester_user_id, route, key)` 唯一索引为最终裁判，在同一事务内写入幂等记录、业务数据和统一 Outbox。相同键且请求哈希相同返回首次响应；哈希不同返回 `409 IDEMPOTENCY_KEY_REUSED`。Redis 分布式锁只能优化高竞争状态切换，不能替代唯一索引和事务。
 - 用户删除 AI 凭据后，引用该凭据的知识树保留但默认凭据置空；后续叶子节点追问要求用户选择新的已验证凭据。
 
 ## 6. 缓存、限流与任务
 
-- Redis：Sa-Token 会话、热点文章、验证码、短期幂等结果、SSE 连接元数据和分布式锁。
+- Redis：Sa-Token 会话、热点文章、验证码和分布式锁。幂等结果的权威记录在 MySQL，Redis 仅可作缓存。
 - Sentinel：登录、AI 创建、文件上传凭证、公开文章查询分别配置限流与降级；AI 路由必须设置按用户的额度限制。
 - XXL-JOB：定时发布文章、Outbox 补投、孤儿上传清理、过期 AI 任务清理、MinerU ZIP 解析失败重试、每日练习统计汇总。
-- RocketMQ：`ai.task.created`、`question.mineru.import.requested`、`question.import.completed`、`learning.tree.generated`、`practice.recorded`。所有消费者幂等。节点扩展相关事件在首期不投递，保留给后续功能启用。
+- RocketMQ：`async.task.requested`、`async.task.succeeded`、`async.task.failed`、`question.import.completed`、`learning.tree.generated`、`practice.recorded`。所有消费者按事件 ID 幂等；任务结果事件使用 `taskId` 和结果哈希校验。节点扩展相关事件在首期不投递，保留给后续功能启用。
+- 异步任务状态为 `PENDING`、`RUNNING`、`SUCCEEDED`、`FAILED`、`CANCELLED`。`SUCCEEDED` 只表示源服务已经在本地事务内写入领域结果；前端轮询任务接口，看到 `SUCCEEDED` 后再按 `resourceType` 和 `resourceId` 查询结果。任务状态变化不持久化事件，也不提供进度回放。
 
 ## 7. 可观测性与交付
 
 - 所有 HTTP、Dubbo、RocketMQ、XXL-JOB 和 AI 调用携带 `traceId`。
-- 记录延迟、错误率、Token 使用量、导入成功率、SSE 在线数、消息积压和任务重试次数。
+- 记录延迟、错误率、Token 使用量、导入成功率、消息积压和任务重试次数。
 - 配置按 `local`、`dev`、`prod` 放入 Nacos namespace；数据库、Redis、MQ、MinIO 和模型密钥只由环境变量注入。
 - CI 至少执行编译、单元测试、API 契约测试、数据库迁移校验和依赖漏洞扫描。MySQL schema 由 Flyway 管理，禁止生产手工改表。
 - 首期生产部署为单台服务器 Docker Compose，容器化运行 Nacos、MySQL、Redis、MinIO、RocketMQ、XXL-JOB、Gateway 和业务服务；部署入口提供环境变量模板与健康检查。
 - MySQL 执行每日逻辑备份，MinIO 执行每日增量备份，二者均保留 7 天；MinerU 原始 ZIP 由 XXL-JOB 在成功导入 15 天后清理，已被题目引用的 Markdown 与图片不受影响。
+- 未来仅在数据量确实达到阈值后按业务 ID 做水平分表或分库，分片键、路由算法和迁移窗口届时单独设计；第一期不添加无实际用途的分片字段，也不做按服务垂直拆分。
 
 ## 8. 当前技术风险
 
