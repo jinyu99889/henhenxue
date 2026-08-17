@@ -3,7 +3,7 @@
 数据库的唯一结构来源是 [`04-schema.sql`](04-schema.sql)。该脚本可在 MySQL 8.0 空实例直接执行，所有表、字段、生成列、索引和字段含义均以 SQL `COMMENT` 写入。
 
 ```sh
-mysql -u <user> -p < docs/04-schema.sql
+mysql -u <user> -p < backend/docs/04-schema.sql
 ```
 
 脚本会创建 `hengxue` schema，字符集为 `utf8mb4`、排序规则为 `utf8mb4_0900_ai_ci`。它故意不创建跨服务外键：服务边界内由本地事务校验，跨服务 ID 仅为逻辑引用。

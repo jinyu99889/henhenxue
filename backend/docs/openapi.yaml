@@ -501,7 +501,7 @@ components:
     Ulid: {type: string, pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'}
     Slug: {type: string, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$', maxLength: 128}
     ApiResponse: {type: object, required: [code, message, data, traceId], properties: {code: {const: 0}, message: {const: OK}, data: {}, traceId: {type: string}}}
-    ErrorResponse: {type: object, required: [code, message, traceId], properties: {code: {type: string}, message: {type: string}, data: {type: 'null'}, traceId: {type: string}}}
+    ErrorResponse: {type: object, required: [code, message, traceId], properties: {code: {type: string, description: '业务错误码；INTERNAL_ERROR 表示未预期服务端错误，SERVICE_UNAVAILABLE 表示服务暂不可用。'}, message: {type: string}, data: {type: 'null'}, traceId: {type: string}}}
     RegisterRequest: {type: object, additionalProperties: false, required: [username, email, emailCode, password], properties: {username: {type: string, minLength: 8, maxLength: 64}, email: {type: string, format: email}, emailCode: {type: string, pattern: '^\\d{6}$'}, password: {type: string, minLength: 8, maxLength: 128}}}
     LoginRequest: {type: object, additionalProperties: false, required: [account, password], properties: {account: {type: string, minLength: 1, maxLength: 128}, password: {type: string, minLength: 8, maxLength: 128}}}
     EmailCodeRequest: {type: object, additionalProperties: false, required: [email, purpose], properties: {email: {type: string, format: email}, purpose: {type: string, enum: [REGISTER, PASSWORD_RESET]}}}

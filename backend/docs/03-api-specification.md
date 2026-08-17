@@ -4,6 +4,7 @@
 
 - 外部基础路径：`/api/v1`；全部 JSON 使用 `application/json; charset=utf-8`。
 - 认证：除公开接口外均携带 Sa-Token 请求头。令牌名称由网关统一配置，前端不得自行解析令牌权限。
+- `traceId` 通过 `X-Trace-Id` 请求头在链路中传递；Gateway 或入口服务在缺失或非法时生成，服务响应须回写该请求头，响应体中的 `traceId` 与其一致。
 - 成功响应：`{ "code": 0, "message": "OK", "data": {}, "traceId": "..." }`。
 - 失败响应遵循同一包装，`code` 为业务码；HTTP 使用 400、401、403、404、409、422、429、500、503 等语义状态。
 - 分页请求：`page` 从 1 开始，`pageSize` 最大 100；分页响应为 `{items, page, pageSize, total}`。
@@ -33,6 +34,8 @@
 | 422 | `LEARNING_NODE_NOT_LEAF` | 非叶子节点发起追问。 |
 | 422 | `IMPORT_ASSET_INVALID` | 导入包资源或路径校验失败。 |
 | 429 | `RATE_LIMITED` | 被限流；可附带 `retryAfterSeconds`。 |
+| 500 | `INTERNAL_ERROR` | 未预期的服务端错误；不返回内部异常详情。 |
+| 503 | `SERVICE_UNAVAILABLE` | 服务或关键依赖暂不可用，可安全重试。 |
 
 `Idempotency-Key` 为 UUID，以下操作必须携带：注册、密码重置、创建或更新/撤销 AI 凭据、创建文章草稿或题库、手工创建题目、题目发布/归档、创建知识树、发起追问、创建导入任务、创建练习、提交答案、完成练习、文章发布/下架、版本激活、文件完成登记和从题库移除题目。客户端重试必须复用同一键。服务端以方法、路由和去除空白后按键名字典序序列化的 JSON 请求体计算 SHA-256 `requestHash`；相同键和哈希返回第一次的 HTTP 状态与响应体，仍在执行则返回已创建的资源/任务和 `202`，无资源可返回时才使用 `409 REQUEST_IN_PROGRESS`；相同键但不同哈希返回 `409 IDEMPOTENCY_KEY_REUSED`。记录保留 7 天。收藏/取消收藏以关联表唯一键保证天然幂等，不要求该请求头。
 

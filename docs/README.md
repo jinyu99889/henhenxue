@@ -1,16 +1,12 @@
 # 狠狠学文档索引
 
-本目录是项目从零开始的基线文档。所有需求、接口和数据库变更应先更新相应文档，再进入开发。
+本目录存放产品、架构和前端基线文档。接口与数据库文档位于 [`backend/docs/`](../backend/docs/README.md)，应在对应实现前先更新契约。
 
 | 文档 | 作用 |
 | --- | --- |
 | [01-product-requirements.md](01-product-requirements.md) | 产品范围、用户流程、验收标准和待确认的产品规则 |
 | [02-technical-design.md](02-technical-design.md) | 微服务边界、技术选型、部署与非功能要求 |
-| [03-api-specification.md](03-api-specification.md) | HTTP 全局约定、任务状态机、错误码与并发规则 |
-| [03-api-reference.md](03-api-reference.md) | 按端点聚合的开发手册：路径、参数、请求体和响应体在同一节 |
-| [openapi.yaml](openapi.yaml) | 可机器校验的 OpenAPI 3.1 唯一接口契约；修改后运行生成脚本更新接口手册 |
-| [04-schema.sql](04-schema.sql) | 可直接执行的 MySQL 8.0 建库脚本，字段与索引均带说明 |
-| [04-data-model.md](04-data-model.md) | 建库和后续 Flyway 迁移说明 |
+| [后端开发文档](../backend/docs/README.md) | API 契约、数据模型、建库脚本和实体关系图 |
 | [05-frontend-guidelines.md](05-frontend-guidelines.md) | 面向后端协作的前端技术路线和页面契约 |
 
 ## 第一轮需要确认的决策

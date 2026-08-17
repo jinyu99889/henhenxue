@@ -4,8 +4,8 @@
 require "yaml"
 
 ROOT = File.expand_path("..", __dir__)
-INPUT = File.join(ROOT, "docs/openapi.yaml")
-OUTPUT = File.join(ROOT, "docs/03-api-reference.md")
+INPUT = File.join(ROOT, "backend/docs/openapi.yaml")
+OUTPUT = File.join(ROOT, "backend/docs/03-api-reference.md")
 
 doc = YAML.load_file(INPUT)
 components = doc.fetch("components")

@@ -4,6 +4,7 @@
 
 ```text
 backend
+├── docs                            接口契约、数据模型与建库脚本
 ├── common
 │   ├── common-core             异常、响应、分页、审计和序列化约定
 │   ├── common-web              Servlet HTTP 适配通用能力
@@ -38,6 +39,10 @@ com.hengxue.<service>
 ```
 
 数据库迁移位于每个服务的 `src/main/resources/db/migration/`，仅追加 Flyway 迁移文件。所有 `application.yaml` 中的 `TODO` 为部署前必须检查或填写的参数，机密值只能从环境变量或密钥管理系统注入。
+
+## 开发文档
+
+接口契约、数据库建模说明和 ER 图统一位于 [`docs/`](docs/README.md)。`docs/openapi.yaml` 是机器可读的 HTTP API 唯一来源；修改后在仓库根目录执行 `ruby scripts/generate_api_reference.rb`，重新生成 `docs/03-api-reference.md`。
 
 ## 验证
 
