@@ -317,9 +317,13 @@ button:disabled { cursor: not-allowed; opacity: 0.42; }
 .auth-form input { width: 100%; min-height: 41px; padding: 0 0; border: 0; border-bottom: 1px solid rgba(0,0,0,0.2); background: transparent; color: #0a0a0b; font-size: 14px; }
 .code-field { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
 .code-field button { min-height: 29px; padding: 0 9px; border: 1px solid rgba(0,0,0,0.15); background: #ffffff; font-size: 11px; cursor: pointer; }
+.code-field button:disabled, .auth-submit:disabled { cursor: not-allowed; opacity: 0.56; }
 .forgot-password { justify-self: start; margin: -5px 0 3px; padding: 0; border: 0; background: transparent; font-size: 11px; text-decoration: underline; cursor: pointer; }
 .auth-submit { width: fit-content; margin-top: 6px; }
 .auth-notice { display: flex; align-items: flex-start; gap: 7px; margin: 0; color: #505056; font-size: 12px; line-height: 1.55; }
+.auth-notice.is-error { color: #a31d1d; }
+.auth-notice.is-success { color: #16703b; }
+.auth-notice small { display: block; margin-top: 3px; color: #6a6a70; font-size: 10px; }
 
 @media (min-width: 768px) {
   .persistent-video-stage { inset: 0; }

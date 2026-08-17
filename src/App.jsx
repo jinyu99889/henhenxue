@@ -26,6 +26,49 @@ import authorAvatar from './assets/jinyu-avatar.jpg'
 
 const easing = [0.16, 1, 0.3, 1]
 const heroVideoUrl = '/media/hero-hand.mp4'
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')
+
+function createIdempotencyKey() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID()
+
+  const bytes = new Uint8Array(16)
+  window.crypto.getRandomValues(bytes)
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+}
+
+async function requestApi(path, options = {}) {
+  let response
+  const token = window.sessionStorage.getItem('satoken')
+
+  try {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      ...options,
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { satoken: token } : {}),
+        ...options.headers,
+      },
+    })
+  } catch {
+    const error = new Error('网络连接失败，请检查本机网关是否已启动。')
+    error.isNetworkError = true
+    throw error
+  }
+
+  const body = await response.json().catch(() => null)
+  if (response.status === 401) window.sessionStorage.removeItem('satoken')
+  if (!response.ok || body?.code !== 0) {
+    const error = new Error(body?.message || '请求未能完成，请稍后重试。')
+    error.code = body?.code
+    error.traceId = body?.traceId
+    throw error
+  }
+
+  return body.data
+}
 
 const routes = {
   '/': '首页',
@@ -472,19 +515,134 @@ function ProfilePage({ navigate }) {
 }
 
 function AuthPage({ mode, navigate }) {
-  const [form, setForm] = useState({ account: '', email: '', code: '', password: '' })
-  const [notice, setNotice] = useState('')
+  const [form, setForm] = useState({ account: '', nickname: '', email: '', code: '', password: '' })
+  const [notice, setNotice] = useState(null)
+  const [isSendingCode, setIsSendingCode] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [codeCooldown, setCodeCooldown] = useState(0)
+  const [registrationKey, setRegistrationKey] = useState(null)
   const isLogin = mode === 'login'
-  const submit = (event) => {
-    event.preventDefault()
-    if ((isLogin && (!form.account || !form.password)) || (!isLogin && (!form.account || !form.email || !form.code || !form.password))) { setNotice('请先完整填写演示表单。'); return }
-    setNotice(isLogin ? '登录信息已校验，正在进入你的学习空间。' : '注册信息已暂存，真实服务接入后将发送邮箱验证码。')
+
+  useEffect(() => {
+    if (codeCooldown === 0) return undefined
+
+    const timeoutId = window.setTimeout(() => setCodeCooldown((seconds) => Math.max(0, seconds - 1)), 1000)
+    return () => window.clearTimeout(timeoutId)
+  }, [codeCooldown])
+
+  const showError = (error) => setNotice({ type: 'error', message: error.message, traceId: error.traceId })
+
+  const sendVerificationCode = async () => {
+    const email = form.email.trim().toLowerCase()
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setNotice({ type: 'error', message: '请先填写有效的邮箱地址。' })
+      return
+    }
+
+    setIsSendingCode(true)
+    setNotice(null)
+    try {
+      await requestApi('/auth/email-codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, purpose: 'REGISTER' }),
+      })
+      setCodeCooldown(60)
+      setNotice({ type: 'success', message: '验证码已发送，请查收邮箱。' })
+    } catch (error) {
+      showError(error)
+    } finally {
+      setIsSendingCode(false)
+    }
   }
-  const update = (key) => (event) => setForm((value) => ({ ...value, [key]: event.target.value }))
+
+  const submit = async (event) => {
+    event.preventDefault()
+    if (isLogin) {
+      const account = form.account.trim()
+      if (!account || account.length > 128) {
+        setNotice({ type: 'error', message: '请输入 1 至 128 位用户名或邮箱。' })
+        return
+      }
+      if (form.password.length < 8 || form.password.length > 128 || !/[A-Za-z]/.test(form.password) || !/\d/.test(form.password)) {
+        setNotice({ type: 'error', message: '密码长度应为 8 至 128 位，且必须同时包含字母和数字。' })
+        return
+      }
+      setIsSubmitting(true)
+      setNotice(null)
+      try {
+        const result = await requestApi('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ account, password: form.password }),
+        })
+        window.sessionStorage.setItem('satoken', result.token)
+        setForm((value) => ({ ...value, password: '' }))
+        navigate('/')
+      } catch (error) {
+        showError(error)
+      } finally {
+        setIsSubmitting(false)
+      }
+      return
+    }
+
+    const username = form.account.trim()
+    const nickname = form.nickname.trim()
+    const email = form.email.trim().toLowerCase()
+    const emailCode = form.code.trim()
+    if (username.length < 8 || username.length > 64) {
+      setNotice({ type: 'error', message: '用户名长度应为 8 至 64 位。' })
+      return
+    }
+    if (!nickname || nickname.length > 64) {
+      setNotice({ type: 'error', message: '请填写 1 至 64 位的昵称。' })
+      return
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setNotice({ type: 'error', message: '请填写有效的邮箱地址。' })
+      return
+    }
+    if (!/^\d{6}$/.test(emailCode)) {
+      setNotice({ type: 'error', message: '请输入 6 位数字邮箱验证码。' })
+      return
+    }
+    if (form.password.length < 8 || !/[A-Za-z]/.test(form.password) || !/\d/.test(form.password)) {
+      setNotice({ type: 'error', message: '密码至少 8 位，且必须同时包含字母和数字。' })
+      return
+    }
+
+    const idempotencyKey = registrationKey || createIdempotencyKey()
+    setRegistrationKey(idempotencyKey)
+    setIsSubmitting(true)
+    setNotice(null)
+    try {
+      await requestApi('/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify({ username, nickname, email, emailCode, password: form.password }),
+      })
+      setForm((value) => ({ ...value, code: '', password: '' }))
+      setRegistrationKey(null)
+      navigate('/login')
+    } catch (error) {
+      if (!error.isNetworkError) setRegistrationKey(null)
+      showError(error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+  const update = (key) => (event) => {
+    setForm((value) => ({ ...value, [key]: event.target.value }))
+    setNotice(null)
+  }
   const title = isLogin ? '继续你的学习。' : <>开始建立自己的<br />知识系统。</>
 
   return (
-    <main className="auth-shell"><div className="auth-media"><video autoPlay muted playsInline preload="auto" onEnded={(event) => { const video = event.currentTarget; video.currentTime = Math.max(0, video.duration - 0.08); video.pause() }}><source src={heroVideoUrl} type="video/mp4" /></video><div className="auth-media-wash" /><button type="button" className="auth-back" onClick={() => navigate('/')}><ArrowLeft size={15} />返回首页</button><div className="auth-wordmark"><BrandMark /><span>狠狠学</span></div><p>让问题有路径，<br />让练习有回声。</p></div><section className="auth-panel"><div className="auth-mobile-chrome"><button type="button" className="brand" onClick={() => navigate('/')}><BrandMark /><span>狠狠学</span></button><button type="button" onClick={() => navigate('/')}><ArrowLeft size={14} />首页</button></div><div className="auth-switch"><button type="button" className={isLogin ? 'is-active' : ''} onClick={() => navigate('/login')}>登录</button><button type="button" className={!isLogin ? 'is-active' : ''} onClick={() => navigate('/register')}>注册</button></div><div className="auth-heading"><span className="section-label">{isLogin ? '欢迎回来' : '创建账号'}</span><h1>{title}</h1><p>{isLogin ? '用户名或邮箱都可以登录。' : '使用邮箱完成验证后，就能创建私有题库和知识树。'}</p></div><form className="auth-form" onSubmit={submit}><label>{isLogin ? '用户名或邮箱' : '用户名'}<input value={form.account} onChange={update('account')} placeholder={isLogin ? 'name@example.com' : '8 - 64 位'} /></label>{!isLogin && <label>邮箱地址<input type="email" value={form.email} onChange={update('email')} placeholder="name@example.com" /></label>}{!isLogin && <label>邮箱验证码<div className="code-field"><input value={form.code} onChange={update('code')} placeholder="6 位验证码" /><button type="button">发送验证码</button></div></label>}<label>密码<input type="password" value={form.password} onChange={update('password')} placeholder="8 - 64 位" /></label>{isLogin && <button type="button" className="forgot-password">忘记密码？</button>}<button type="submit" className="primary-action auth-submit">{isLogin ? '登录并继续' : '创建我的账号'} <ArrowUpRight size={15} /></button>{notice && <p className="auth-notice"><Mail size={14} />{notice}</p>}</form></section>
+    <main className="auth-shell"><div className="auth-media"><video autoPlay muted playsInline preload="auto" onEnded={(event) => { const video = event.currentTarget; video.currentTime = Math.max(0, video.duration - 0.08); video.pause() }}><source src={heroVideoUrl} type="video/mp4" /></video><div className="auth-media-wash" /><button type="button" className="auth-back" onClick={() => navigate('/')}><ArrowLeft size={15} />返回首页</button><div className="auth-wordmark"><BrandMark /><span>狠狠学</span></div><p>让问题有路径，<br />让练习有回声。</p></div><section className="auth-panel"><div className="auth-mobile-chrome"><button type="button" className="brand" onClick={() => navigate('/')}><BrandMark /><span>狠狠学</span></button><button type="button" onClick={() => navigate('/')}><ArrowLeft size={14} />首页</button></div><div className="auth-switch"><button type="button" className={isLogin ? 'is-active' : ''} onClick={() => navigate('/login')}>登录</button><button type="button" className={!isLogin ? 'is-active' : ''} onClick={() => navigate('/register')}>注册</button></div><div className="auth-heading"><span className="section-label">{isLogin ? '欢迎回来' : '创建账号'}</span><h1>{title}</h1><p>{isLogin ? '用户名或邮箱都可以登录。' : '使用邮箱完成验证后，就能创建私有题库和知识树。'}</p></div><form className="auth-form" onSubmit={submit} noValidate><label>{isLogin ? '用户名或邮箱' : '用户名'}<input value={form.account} onChange={update('account')} placeholder={isLogin ? 'name@example.com' : '8 - 64 位'} autoComplete="username" /></label>{!isLogin && <label>昵称<input value={form.nickname} onChange={update('nickname')} placeholder="显示名称" maxLength="64" autoComplete="nickname" /></label>}{!isLogin && <label>邮箱地址<input type="email" value={form.email} onChange={update('email')} placeholder="name@example.com" autoComplete="email" /></label>}{!isLogin && <label>邮箱验证码<div className="code-field"><input value={form.code} onChange={update('code')} placeholder="6 位验证码" inputMode="numeric" maxLength="6" autoComplete="one-time-code" /><button type="button" onClick={sendVerificationCode} disabled={isSendingCode || codeCooldown > 0}>{isSendingCode ? '发送中...' : codeCooldown > 0 ? `${codeCooldown} 秒后重发` : '发送验证码'}</button></div></label>}<label>密码<input type="password" value={form.password} onChange={update('password')} placeholder="8 - 128 位，含字母和数字" autoComplete={isLogin ? 'current-password' : 'new-password'} /></label>{isLogin && <button type="button" className="forgot-password">忘记密码？</button>}<button type="submit" className="primary-action auth-submit" disabled={isSubmitting}>{isSubmitting ? isLogin ? '登录中...' : '创建中...' : isLogin ? '登录并继续' : '创建我的账号'} <ArrowUpRight size={15} /></button>{notice && <p className={`auth-notice is-${notice.type}`} role={notice.type === 'error' ? 'alert' : 'status'}><Mail size={14} /><span>{notice.message}{notice.traceId && <small>追踪 ID：{notice.traceId}</small>}</span></p>}</form></section>
     </main>
   )
 }
