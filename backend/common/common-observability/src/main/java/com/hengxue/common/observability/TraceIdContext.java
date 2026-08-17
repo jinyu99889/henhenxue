@@ -1,6 +1,7 @@
 package com.hengxue.common.observability;
 
 import java.util.UUID;
+import org.slf4j.MDC;
 
 /**
  * 当前线程的 traceId 上下文。
@@ -32,7 +33,7 @@ public final class TraceIdContext {
         String traceId = currentTraceId();
         if (traceId == null) {
             traceId = UUID.randomUUID().toString();
-            TRACE_ID_HOLDER.set(traceId);
+            bind(traceId);
         }
         return traceId;
     }
@@ -47,6 +48,7 @@ public final class TraceIdContext {
             throw new IllegalArgumentException("链路标识不能为空或空白");
         }
         TRACE_ID_HOLDER.set(traceId);
+        MDC.put("traceId", traceId);
     }
 
     /**
@@ -54,5 +56,6 @@ public final class TraceIdContext {
      */
     public static void clear() {
         TRACE_ID_HOLDER.remove();
+        MDC.remove("traceId");
     }
 }

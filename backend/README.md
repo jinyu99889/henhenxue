@@ -38,7 +38,7 @@ com.hengxue.<service>
 └── config            Spring、Sa-Token、消息、任务配置
 ```
 
-数据库迁移位于每个服务的 `src/main/resources/db/migration/`，仅追加 Flyway 迁移文件。所有 `application.yaml` 中的 `TODO` 为部署前必须检查或填写的参数，机密值只能从环境变量或密钥管理系统注入。
+数据库结构与数据变更由受控的人工 SQL 脚本执行，并在执行前完成备份与审核。所有 `application.yaml` 中的 `TODO` 为部署前必须检查或填写的参数，机密值只能从环境变量或密钥管理系统注入。
 
 ## 开发文档
 

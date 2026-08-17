@@ -1,2 +1,0 @@
-/** Outbox 事件及 RocketMQ 生产/消费适配。 */
-package com.hengxue.auth.infrastructure.messaging;

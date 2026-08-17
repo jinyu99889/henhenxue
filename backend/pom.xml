@@ -28,7 +28,6 @@
         <dubbo.version>3.3.6</dubbo.version>
         <sa-token.version>1.44.0</sa-token.version>
         <mybatis-plus.version>3.5.12</mybatis-plus.version>
-        <flyway.version>11.8.2</flyway.version>
         <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
     </properties>
 

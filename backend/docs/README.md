@@ -9,7 +9,7 @@
 | [03-api-reference.md](03-api-reference.md) | 根据 OpenAPI 自动生成的端点开发手册 |
 | [04-schema.sql](04-schema.sql) | MySQL 8.0 一期建库基线，字段、索引和说明的唯一来源 |
 | [04-er-diagram.md](04-er-diagram.md) | 按服务分区的实体关系图与逻辑引用说明 |
-| [04-data-model.md](04-data-model.md) | 建库基线和后续 Flyway 迁移说明 |
+| [04-data-model.md](04-data-model.md) | 建库基线和后续人工 SQL 变更说明 |
 
 修改 [`openapi.yaml`](openapi.yaml) 后，在仓库根目录执行：
 

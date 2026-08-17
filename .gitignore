@@ -1,9 +1,14 @@
 node_modules/
 dist/
+**/target/
+**/logs/
+**/application-dev.yaml
 .idea/
 .DS_Store
 .codegraph/
+AGENTS.md
 *.local
+*.swp
 .env
 .env.*
 !.env.example

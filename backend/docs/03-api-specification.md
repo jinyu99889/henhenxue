@@ -13,7 +13,7 @@
 
 ### 1.1 契约状态与字段规则
 
-本文与同目录的 [`openapi.yaml`](openapi.yaml) 共同构成第一期 HTTP 的规范性契约；`openapi.yaml` 是机器校验和契约测试的输入，本文解释业务状态机与跨端行为。不得以 Controller 实现反向定义接口。所有 ID 均为 26 位 ULID 字符串；时间均为带 `Z` 的 UTC ISO 8601；未声明可空的字段不得为 `null`。请求中未定义的字段一律拒绝；`v1` 响应只可增加可选字段，删除字段、收紧语义或改变字段类型必须通过新的 API 版本演进。
+本文与同目录的 [`openapi.yaml`](openapi.yaml) 共同构成第一期 HTTP 的规范性契约；`openapi.yaml` 是机器校验和契约测试的输入，本文解释业务状态机与跨端行为。不得以 Controller 实现反向定义接口。新生成的 ID 均为 26 位十进制字符串，其数值由雪花算法产生；已存在的 26 位 ULID 保持兼容。时间均为带 `Z` 的 UTC ISO 8601；未声明可空的字段不得为 `null`。请求中未定义的字段一律拒绝；`v1` 响应只可增加可选字段，删除字段、收紧语义或改变字段类型必须通过新的 API 版本演进。
 
 字符串字段的通用上限：名称、标题 128；slug 128 且仅小写字母、数字、连字符；摘要 500；普通 Markdown 100 KiB；AI 原始问题和追问 8 KiB；分页 `pageSize` 默认为 20、最大 100。所有列表响应均使用 `{ "items": [], "page": 1, "pageSize": 20, "total": 0 }`。
 
@@ -64,7 +64,7 @@
 | --- | --- | --- |
 | POST | `/auth/register` | 公开 | 账号密码注册；请求须带注册邮箱验证码。 |
 | POST | `/auth/login` | 公开 | 密码登录，返回登录态与用户摘要。 |
-| POST | `/auth/email-codes` | 公开 | 发送注册校验或重置密码验证码。 |
+| POST | `/auth/email-codes` | 公开 | 发送注册校验或重置密码验证码；注册邮箱已存在时返回 `409 EMAIL_ALREADY_REGISTERED`。 |
 | POST | `/auth/password-resets` | 公开 | 使用邮箱验证码重置密码。 |
 | POST | `/auth/password-changes` | 登录 | 使用旧密码修改当前账号密码。 |
 | POST | `/auth/logout` | 登录 | 注销当前设备。 |
@@ -75,6 +75,8 @@
 | GET | `/ai-credentials` | 登录 | 获取当前用户的脱敏凭据列表。 |
 | PATCH | `/ai-credentials/{credentialId}` | 登录 | 修改模型或轮换 Key，并立即重新连接校验。 |
 | DELETE | `/ai-credentials/{credentialId}` | 登录 | 撤销凭据；待执行任务以 `CREDENTIAL_REVOKED` 失败，已向模型发起的单次请求允许结束。 |
+
+登录会话使用 Redis 持久化 Sa-Token，令牌名称为 `satoken`，客户端通过同名请求头传递。允许同一账号多设备并发登录，每个账号最多保留 3 个有效会话，超过上限时按 Sa-Token 的先进先出策略注销最早会话。登录失败按来源 IP 与账号摘要分别限流；账号不存在、账号被禁用、身份软删或密码错误统一返回 `401 UNAUTHENTICATED`，未知账号仍执行固定 BCrypt 哈希校验以降低时序枚举风险。
 
 凭据创建/更新请求仅支持固定提供商：
 
@@ -317,7 +319,7 @@
 
 ### 身份与用户
 
-`EmailCodeRequest`：`email`（email，必填）、`purpose`（`REGISTER|PASSWORD_RESET`，必填）。`RegisterRequest`：`username`（8-64）、`email`、`emailCode`（6 位）、`password`（8-128）。`LoginRequest`：`account`（用户名或邮箱）、`password`。`UserProfilePatchRequest`：`nickname`（1-64，可选）、`avatarFileId`（ULID，可选）、`preferences`（对象，可选；仅白名单学习偏好键）。`UserSummary`：`id`、`username`、`email`、`emailVerifiedAt`、`nickname`、`avatarFileId`、`permissions`、`version`。
+`EmailCodeRequest`：`email`（email，必填）、`purpose`（`REGISTER|PASSWORD_RESET`，必填）。`RegisterRequest`：`username`（8-64）、`email`、`emailCode`（6 位）、`password`（8-128，且必须同时包含字母和数字）、`nickname`（1-64，必填）。`LoginRequest`：`account`（用户名或邮箱）、`password`。`UserProfilePatchRequest`：`nickname`（1-64，可选）、`avatarFileId`（ULID，可选）、`preferences`（对象，可选；仅白名单学习偏好键）。`UserSummary`：`id`、`username`、`email`、`emailVerifiedAt`、`nickname`、`avatarFileId`、`permissions`、`version`。
 
 `AiCredentialUpsertRequest`：`providerCode`（`DEEPSEEK|DASHSCOPE`）、`model`（1-128）、`apiKey`（1-512）。`AiCredential`：`id`、`providerCode`、`model`、`keyFingerprintSuffix`、`status`（`VERIFYING|VERIFIED|FAILED|REVOKED`）、`verifiedAt`、`lastUsedAt`、`version`；响应中绝不出现 `apiKey` 或密文。
 

@@ -20,4 +20,4 @@ mysql -u <user> -p < backend/docs/04-schema.sql
 | `question-service` | `question_*`、`practice_*` |
 | 统一平台 | `sys_outbox_event`、`sys_idempotency_record`；用服务类型字段区分写入者 |
 
-后续变更只能新增 Flyway 迁移，不能直接修改已执行的基线。未来只按业务 ID 做水平分表/分库，不按服务垂直拆分；字段需要查询、排序、关联、唯一性或权限校验时，必须新增实体列或关联表，不能塞进 JSON。
+后续变更通过受控的人工 SQL 脚本执行，并记录执行时间、目标环境和回滚方案。未来只按业务 ID 做水平分表/分库，不按服务垂直拆分；字段需要查询、排序、关联、唯一性或权限校验时，必须新增实体列或关联表，不能塞进 JSON。

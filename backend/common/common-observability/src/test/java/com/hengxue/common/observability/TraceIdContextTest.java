@@ -2,6 +2,7 @@ package com.hengxue.common.observability;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -20,6 +21,7 @@ class TraceIdContextTest {
         TraceIdContext.bind("trace-1");
 
         assertEquals("trace-1", TraceIdContext.getOrCreate());
+        assertEquals("trace-1", MDC.get("traceId"));
     }
 
     @Test
@@ -45,5 +47,6 @@ class TraceIdContextTest {
         TraceIdContext.clear();
 
         assertNull(TraceIdContext.currentTraceId());
+        assertNull(MDC.get("traceId"));
     }
 }

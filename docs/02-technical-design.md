@@ -83,7 +83,7 @@ AgentScope Java 的生产调用应复用单例 Agent，通过 `RuntimeContext(us
 - MinIO 不公开桶。上传使用用途、大小、MIME 类型受限的预签名 URL；下载按对象归属重新签名。
 - 博客资源仅管理员可上传，业务层不限制附件类型；对 HTML、SVG、脚本、可执行文件等潜在活动内容一律以 `Content-Disposition: attachment` 下载，禁止同源内联执行。
 - 密码使用 Argon2id 或 BCrypt，不记录令牌、密码、完整 Prompt 中的敏感个人信息到日志。
-- 账号密码登录；注册与密码重置请求必须携带邮箱验证码。验证码存 Redis 并设置短 TTL、单次消费和按邮箱/IP 限流。管理员初始化数据仅由数据库迁移/受控运维脚本写入，不提供公共角色授予接口。
+- 账号密码登录；注册与密码重置请求必须携带邮箱验证码。验证码存 Redis 并设置短 TTL、单次消费和按邮箱限流；发送验证码先经 Sentinel 服务级限流与来源 IP 的 Redis 分布式窗口限流，再检查验证码状态、发送锁和数据库邮箱状态。注册验证码邮箱已存在时返回 `409 EMAIL_ALREADY_REGISTERED`，不生成验证码或投递邮件。未注册邮箱的邮件经有界本地任务队列异步投递，公开接口不等待 SMTP，投递失败时撤销验证码并释放发送锁。管理员初始化数据仅由受控运维脚本写入，不提供公共角色授予接口。
 - RBAC 使用“用户-角色-权限”模型：Gateway 路由和服务方法均按权限码校验，`ADMIN` 角色只是在初始化时被授予完整后台权限的预置角色。
 - 对创建异步任务、注册、发布、下架、版本激活、提交答案和完成练习等非幂等写操作，前端必须生成并携带 UUID 格式 `Idempotency-Key`；网络重试必须复用原键。服务端以统一表的 `(owner_service, requester_user_id, route, key)` 唯一索引为最终裁判，在同一事务内写入幂等记录、业务数据和统一 Outbox。相同键且请求哈希相同返回首次响应；哈希不同返回 `409 IDEMPOTENCY_KEY_REUSED`。Redis 分布式锁只能优化高竞争状态切换，不能替代唯一索引和事务。
 - 用户删除 AI 凭据后，引用该凭据的知识树保留但默认凭据置空；后续叶子节点追问要求用户选择新的已验证凭据。
@@ -91,7 +91,7 @@ AgentScope Java 的生产调用应复用单例 Agent，通过 `RuntimeContext(us
 ## 6. 缓存、限流与任务
 
 - Redis：Sa-Token 会话、热点文章、验证码和分布式锁。幂等结果的权威记录在 MySQL，Redis 仅可作缓存。
-- Sentinel：登录、AI 创建、文件上传凭证、公开文章查询分别配置限流与降级；AI 路由必须设置按用户的额度限制。
+- Sentinel：登录、AI 创建、文件上传凭证、公开文章查询和认证服务 `auth.email-code.send-registration`、`auth.registration.submit` 资源分别通过 Nacos 配置限流与降级；AI 路由必须设置按用户的额度限制。
 - XXL-JOB：定时发布文章、Outbox 补投、孤儿上传清理、过期 AI 任务清理、MinerU ZIP 解析失败重试、每日练习统计汇总。
 - RocketMQ：`async.task.requested`、`async.task.succeeded`、`async.task.failed`、`question.import.completed`、`learning.tree.generated`、`practice.recorded`。所有消费者按事件 ID 幂等；任务结果事件使用 `taskId` 和结果哈希校验。节点扩展相关事件在首期不投递，保留给后续功能启用。
 - 异步任务状态为 `PENDING`、`RUNNING`、`SUCCEEDED`、`FAILED`、`CANCELLED`。`SUCCEEDED` 只表示源服务已经在本地事务内写入领域结果；前端轮询任务接口，看到 `SUCCEEDED` 后再按 `resourceType` 和 `resourceId` 查询结果。任务状态变化不持久化事件，也不提供进度回放。
@@ -99,9 +99,9 @@ AgentScope Java 的生产调用应复用单例 Agent，通过 `RuntimeContext(us
 ## 7. 可观测性与交付
 
 - 所有 HTTP、Dubbo、RocketMQ、XXL-JOB 和 AI 调用携带 `traceId`。
-- 记录延迟、错误率、Token 使用量、导入成功率、消息积压和任务重试次数。
-- 配置按 `local`、`dev`、`prod` 放入 Nacos namespace；数据库、Redis、MQ、MinIO 和模型密钥只由环境变量注入。
-- CI 至少执行编译、单元测试、API 契约测试、数据库迁移校验和依赖漏洞扫描。MySQL schema 由 Flyway 管理，禁止生产手工改表。
+- 记录延迟、错误率、Token 使用量、导入成功率、消息积压和任务重试次数。认证服务的注册验证码日志记录掩码邮箱、处理阶段、异常类型与 `traceId`，不记录验证码、密码或完整邮箱。
+- 配置按 `local`、`dev`、`prod` 放入 Nacos namespace；生产环境的数据库、Redis、MQ、MinIO 和模型密钥只由环境变量注入。本地开发使用各服务同级且被 Git 忽略的 `application-dev.yaml` 保存个人连接信息，并通过 `dev` Profile 加载。
+- CI 至少执行编译、单元测试、API 契约测试和依赖漏洞扫描。MySQL schema 变更由受控人工 SQL 脚本执行；执行前须完成备份、审核并保留回滚方案。
 - 首期生产部署为单台服务器 Docker Compose，容器化运行 Nacos、MySQL、Redis、MinIO、RocketMQ、XXL-JOB、Gateway 和业务服务；部署入口提供环境变量模板与健康检查。
 - MySQL 执行每日逻辑备份，MinIO 执行每日增量备份，二者均保留 7 天；MinerU 原始 ZIP 由 XXL-JOB 在成功导入 15 天后清理，已被题目引用的 Markdown 与图片不受影响。
 - 未来仅在数据量确实达到阈值后按业务 ID 做水平分表或分库，分片键、路由算法和迁移窗口届时单独设计；第一期不添加无实际用途的分片字段，也不做按服务垂直拆分。

@@ -21,7 +21,8 @@
 - `username`（必填）：string；最小 8；最大 64
 - `email`（必填）：string；格式 `email`
 - `emailCode`（必填）：string；正则 `^\\d{6}$`
-- `password`（必填）：string；最小 8；最大 128
+- `password`（必填）：string；正则 `^(?=.*[A-Za-z])(?=.*\\d).+$`；最小 8；最大 128
+- `nickname`（必填）：string；最小 1；最大 64
 
 **响应**
 
@@ -30,7 +31,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.username`（必填）：string
       - `data.email`（必填）：string；格式 `email`
       - `data.emailVerifiedAt`（可选）：string；null；格式 `date-time`
@@ -38,7 +39,7 @@
       - `data.avatarFileId`（可选）：object
         - `data.avatarFileId`：以下互斥变体之一
           - 变体 1
-            - `data.avatarFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.avatarFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - 变体 2
             - `data.avatarFileId`：null
       - `data.permissions`（必填）：array
@@ -82,7 +83,7 @@
     - `data`（必填）：object
       - `data.token`（必填）：string
       - `data.user`（必填）：object
-        - `data.user.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+        - `data.user.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
         - `data.user.username`（必填）：string
         - `data.user.email`（必填）：string；格式 `email`
         - `data.user.emailVerifiedAt`（可选）：string；null；格式 `date-time`
@@ -90,7 +91,7 @@
         - `data.user.avatarFileId`（可选）：object
           - `data.user.avatarFileId`：以下互斥变体之一
             - 变体 1
-              - `data.user.avatarFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+              - `data.user.avatarFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
             - 变体 2
               - `data.user.avatarFileId`：null
         - `data.user.permissions`（必填）：array
@@ -98,7 +99,28 @@
         - `data.user.version`（必填）：integer
     - `traceId`（必填）：string
 
+- `400`：Error response
+  - `application/json`
+    - `code`（必填）：string
+    - `message`（必填）：string
+    - `data`（可选）：null
+    - `traceId`（必填）：string
+
 - `401`：Error response
+  - `application/json`
+    - `code`（必填）：string
+    - `message`（必填）：string
+    - `data`（可选）：null
+    - `traceId`（必填）：string
+
+- `429`：Error response
+  - `application/json`
+    - `code`（必填）：string
+    - `message`（必填）：string
+    - `data`（可选）：null
+    - `traceId`（必填）：string
+
+- `503`：Error response
   - `application/json`
     - `code`（必填）：string
     - `message`（必填）：string
@@ -123,6 +145,13 @@
 - `202`：
 
 - `400`：Error response
+  - `application/json`
+    - `code`（必填）：string
+    - `message`（必填）：string
+    - `data`（可选）：null
+    - `traceId`（必填）：string
+
+- `409`：Error response
   - `application/json`
     - `code`（必填）：string
     - `message`（必填）：string
@@ -227,7 +256,7 @@
     - `data`（必填）：object
       - `data.token`（必填）：string
       - `data.user`（必填）：object
-        - `data.user.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+        - `data.user.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
         - `data.user.username`（必填）：string
         - `data.user.email`（必填）：string；格式 `email`
         - `data.user.emailVerifiedAt`（可选）：string；null；格式 `date-time`
@@ -235,7 +264,7 @@
         - `data.user.avatarFileId`（可选）：object
           - `data.user.avatarFileId`：以下互斥变体之一
             - 变体 1
-              - `data.user.avatarFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+              - `data.user.avatarFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
             - 变体 2
               - `data.user.avatarFileId`：null
         - `data.user.permissions`（必填）：array
@@ -266,7 +295,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.username`（必填）：string
       - `data.email`（必填）：string；格式 `email`
       - `data.emailVerifiedAt`（可选）：string；null；格式 `date-time`
@@ -274,7 +303,7 @@
       - `data.avatarFileId`（可选）：object
         - `data.avatarFileId`：以下互斥变体之一
           - 变体 1
-            - `data.avatarFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.avatarFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - 变体 2
             - `data.avatarFileId`：null
       - `data.permissions`（必填）：array
@@ -304,7 +333,7 @@
 
 `application/json`
 - `nickname`（可选）：string；最小 1；最大 64
-- `avatarFileId`（可选）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+- `avatarFileId`（可选）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
 - `preferences`（可选）：object
   - `preferences.defaultPracticeMode`（可选）：string；枚举 `MEMORIZE|EXAM`
 
@@ -315,7 +344,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.username`（必填）：string
       - `data.email`（必填）：string；格式 `email`
       - `data.emailVerifiedAt`（可选）：string；null；格式 `date-time`
@@ -323,7 +352,7 @@
       - `data.avatarFileId`（可选）：object
         - `data.avatarFileId`：以下互斥变体之一
           - 变体 1
-            - `data.avatarFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.avatarFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - 变体 2
             - `data.avatarFileId`：null
       - `data.permissions`（必填）：array
@@ -389,7 +418,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.providerCode`（必填）：string；枚举 `DEEPSEEK|DASHSCOPE`
       - `data.model`（必填）：string
       - `data.keyFingerprintSuffix`（必填）：string
@@ -415,7 +444,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `credentialId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `credentialId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
@@ -433,7 +462,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.providerCode`（必填）：string；枚举 `DEEPSEEK|DASHSCOPE`
       - `data.model`（必填）：string
       - `data.keyFingerprintSuffix`（必填）：string
@@ -459,7 +488,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `credentialId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `credentialId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
@@ -535,14 +564,14 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.title`（必填）：string
       - `data.summary`（必填）：string
       - `data.coverFileId`（可选）：object
         - `data.coverFileId`：以下互斥变体之一
           - 变体 1
-            - `data.coverFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.coverFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - 变体 2
             - `data.coverFileId`：null
       - `data.categories`（可选）：array
@@ -582,14 +611,14 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.title`（必填）：string
       - `data.summary`（必填）：string
       - `data.coverFileId`（可选）：object
         - `data.coverFileId`：以下互斥变体之一
           - 变体 1
-            - `data.coverFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.coverFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - 变体 2
             - `data.coverFileId`：null
       - `data.categories`（可选）：array
@@ -700,7 +729,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `articleId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `articleId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 
 **请求体：** 无。
 
@@ -724,7 +753,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `articleId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `articleId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 
 **请求体：** 无。
 
@@ -760,14 +789,14 @@
 - `coverFileId`（可选）：object
   - `coverFileId`：以下互斥变体之一
     - 变体 1
-      - `coverFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `coverFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
     - 变体 2
       - `coverFileId`：null
 - `contentMd`（必填）：string；最大 102400
 - `categoryIds`（必填）：array；最大项 5
-  - 元素：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+  - 元素：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
 - `tagIds`（必填）：array；最大项 20
-  - 元素：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+  - 元素：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
 - `changeNote`（可选）：string；最大 500
 
 **响应**
@@ -777,14 +806,14 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.title`（必填）：string
       - `data.summary`（必填）：string
       - `data.coverFileId`（可选）：object
         - `data.coverFileId`：以下互斥变体之一
           - 变体 1
-            - `data.coverFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.coverFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - 变体 2
             - `data.coverFileId`：null
       - `data.categories`（可选）：array
@@ -820,7 +849,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `articleId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `articleId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 
 **请求体**
@@ -833,14 +862,14 @@
 - `coverFileId`（可选）：object
   - `coverFileId`：以下互斥变体之一
     - 变体 1
-      - `coverFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `coverFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
     - 变体 2
       - `coverFileId`：null
 - `contentMd`（必填）：string；最大 102400
 - `categoryIds`（必填）：array；最大项 5
-  - 元素：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+  - 元素：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
 - `tagIds`（必填）：array；最大项 20
-  - 元素：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+  - 元素：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
 - `changeNote`（可选）：string；最大 500
 
 **响应**
@@ -850,14 +879,14 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.title`（必填）：string
       - `data.summary`（必填）：string
       - `data.coverFileId`（可选）：object
         - `data.coverFileId`：以下互斥变体之一
           - 变体 1
-            - `data.coverFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.coverFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - 变体 2
             - `data.coverFileId`：null
       - `data.categories`（可选）：array
@@ -893,7 +922,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `articleId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `articleId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
@@ -909,14 +938,14 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.title`（必填）：string
       - `data.summary`（必填）：string
       - `data.coverFileId`（可选）：object
         - `data.coverFileId`：以下互斥变体之一
           - 变体 1
-            - `data.coverFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.coverFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - 变体 2
             - `data.coverFileId`：null
       - `data.categories`（可选）：array
@@ -952,7 +981,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `articleId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `articleId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
@@ -965,14 +994,14 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.title`（必填）：string
       - `data.summary`（必填）：string
       - `data.coverFileId`（可选）：object
         - `data.coverFileId`：以下互斥变体之一
           - 变体 1
-            - `data.coverFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.coverFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - 变体 2
             - `data.coverFileId`：null
       - `data.categories`（可选）：array
@@ -1008,7 +1037,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `articleId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `articleId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 
 **请求体：** 无。
 
@@ -1038,8 +1067,8 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `articleId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
-| `revisionId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `articleId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
+| `revisionId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
@@ -1052,14 +1081,14 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.title`（必填）：string
       - `data.summary`（必填）：string
       - `data.coverFileId`（可选）：object
         - `data.coverFileId`：以下互斥变体之一
           - 变体 1
-            - `data.coverFileId`：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.coverFileId`：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - 变体 2
             - `data.coverFileId`：null
       - `data.categories`（可选）：array
@@ -1113,7 +1142,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.name`（必填）：string
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.description`（可选）：string
@@ -1138,7 +1167,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `categoryId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `categoryId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 
 **请求体**
@@ -1157,7 +1186,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.name`（必填）：string
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.description`（可选）：string
@@ -1182,7 +1211,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `categoryId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `categoryId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
@@ -1195,7 +1224,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.name`（必填）：string
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.description`（可选）：string
@@ -1236,7 +1265,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.name`（必填）：string
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.status`（必填）：string；枚举 `ACTIVE|ARCHIVED`
@@ -1259,7 +1288,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `tagId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `tagId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 
 **请求体**
@@ -1276,7 +1305,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.name`（必填）：string
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.status`（必填）：string；枚举 `ACTIVE|ARCHIVED`
@@ -1299,7 +1328,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `tagId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `tagId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
@@ -1312,7 +1341,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.name`（必填）：string
       - `data.slug`（必填）：string；正则 `^[a-z0-9]+(?:-[a-z0-9]+)*$`；最大 128
       - `data.status`（必填）：string；枚举 `ACTIVE|ARCHIVED`
@@ -1349,7 +1378,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.fileId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.fileId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.uploadUrl`（必填）：string；格式 `uri`
       - `data.requiredHeaders`（必填）：object
       - `data.expiresAt`（必填）：string；格式 `date-time`
@@ -1371,7 +1400,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `fileId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `fileId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
 **请求体：** 无。
@@ -1383,7 +1412,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.originalName`（必填）：string
       - `data.contentType`（必填）：string
       - `data.size`（必填）：integer
@@ -1408,7 +1437,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `fileId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `fileId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 
 **请求体：** 无。
 
@@ -1439,7 +1468,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `taskId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `taskId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 
 **请求体：** 无。
 
@@ -1450,12 +1479,12 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.taskId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.taskId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.taskType`（必填）：string；枚举 `LEARNING_TREE_GENERATE|LEARNING_FOLLOW_UP|QUESTION_IMPORT`
       - `data.status`（必填）：string；枚举 `PENDING|RUNNING|SUCCEEDED|FAILED|CANCELLED`
       - `data.progress`（必填）：integer
       - `data.resourceType`（必填）：string
-      - `data.resourceId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.resourceId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.errorCode`（可选）：string；null
       - `data.errorMessage`（可选）：string；null
       - `data.startedAt`（可选）：string；null；格式 `date-time`
@@ -1520,7 +1549,7 @@
 `application/json`
 - `title`（必填）：string；最小 1；最大 128
 - `originalQuestion`（必填）：string；最小 1；最大 8192
-- `credentialId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+- `credentialId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
 - `language`（必填）：string；枚举 `zh-CN|en-US`
 
 **响应**
@@ -1530,10 +1559,10 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.taskId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.taskId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.status`（必填）：固定为 `PENDING`
       - `data.resourceType`（必填）：string
-      - `data.resourceId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.resourceId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
     - `traceId`（必填）：string
 
 - `400`：Error response
@@ -1552,7 +1581,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `treeId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `treeId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 
 **请求体：** 无。
 
@@ -1563,8 +1592,8 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.treeId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
-      - `data.rootNodeKey`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.treeId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
+      - `data.rootNodeKey`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.nodes`（必填）：array
         - 元素：object
     - `traceId`（必填）：string
@@ -1592,13 +1621,13 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `treeId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `treeId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 
 **请求体**
 
 `application/json`
-- `credentialId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+- `credentialId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
 
 **响应**
 
@@ -1607,8 +1636,8 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.treeId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
-      - `data.rootNodeKey`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.treeId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
+      - `data.rootNodeKey`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.nodes`（必填）：array
         - 元素：object
     - `traceId`（必填）：string
@@ -1629,8 +1658,8 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `treeId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
-| `nodeKey` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `treeId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
+| `nodeKey` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 
 **请求体：** 无。
 
@@ -1641,8 +1670,8 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.treeId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
-      - `data.nodeKey`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.treeId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
+      - `data.nodeKey`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.title`（必填）：string
       - `data.path`（必填）：array
         - 元素：object
@@ -1668,13 +1697,13 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `treeId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `treeId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
 **请求体**
 
 `application/json`
-- `nodeKey`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+- `nodeKey`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
 - `question`（必填）：string；最小 1；最大 8192
 
 **响应**
@@ -1684,12 +1713,12 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.conversationId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.conversationId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.task`（必填）：object
-        - `data.task.taskId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+        - `data.task.taskId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
         - `data.task.status`（必填）：固定为 `PENDING`
         - `data.task.resourceType`（必填）：string
-        - `data.task.resourceId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+        - `data.task.resourceId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
     - `traceId`（必填）：string
 
 - `422`：Error response
@@ -1708,8 +1737,8 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `treeId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
-| `nodeKey` | query | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `treeId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
+| `nodeKey` | query | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 
 **请求体：** 无。
 
@@ -1739,7 +1768,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `conversationId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `conversationId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `page` | query | 否 | integer |
 | `pageSize` | query | 否 | integer |
 
@@ -1816,7 +1845,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.name`（必填）：string
       - `data.description`（可选）：string
       - `data.libraryType`（必填）：string；枚举 `NORMAL|WRONG_QUESTION`
@@ -1842,7 +1871,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `libraryId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `libraryId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 
 **请求体**
@@ -1858,7 +1887,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.name`（必填）：string
       - `data.description`（可选）：string
       - `data.libraryType`（必填）：string；枚举 `NORMAL|WRONG_QUESTION`
@@ -1884,14 +1913,14 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `libraryId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `libraryId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
 **请求体**
 
 `application/json`
-- `fileId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
-- `credentialId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+- `fileId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
+- `credentialId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
 
 **响应**
 
@@ -1900,10 +1929,10 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.taskId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.taskId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.status`（必填）：固定为 `PENDING`
       - `data.resourceType`（必填）：string
-      - `data.resourceId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.resourceId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
     - `traceId`（必填）：string
 
 - `400`：Error response
@@ -1922,7 +1951,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `importId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `importId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 
 **请求体：** 无。
 
@@ -1933,9 +1962,9 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
-      - `data.libraryId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
-      - `data.taskId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
+      - `data.libraryId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
+      - `data.taskId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.status`（必填）：string
       - `data.totalCount`（必填）：integer
       - `data.successCount`（必填）：integer
@@ -1958,7 +1987,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `libraryId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `libraryId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `page` | query | 否 | integer |
 | `pageSize` | query | 否 | integer |
 
@@ -1994,7 +2023,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `libraryId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `libraryId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
 **请求体**
@@ -2061,7 +2090,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.type`（必填）：string
       - `data.stemMd`（必填）：string
       - `data.options`（可选）：array
@@ -2102,7 +2131,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `questionId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `questionId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 
 **请求体**
@@ -2169,7 +2198,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.type`（必填）：string
       - `data.stemMd`（必填）：string
       - `data.options`（可选）：array
@@ -2210,7 +2239,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `questionId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `questionId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
@@ -2223,7 +2252,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.type`（必填）：string
       - `data.stemMd`（必填）：string
       - `data.options`（可选）：array
@@ -2264,7 +2293,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `questionId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `questionId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `If-Match` | header | 是 | string；正则 `^"[1-9][0-9]*"$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
@@ -2277,7 +2306,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.type`（必填）：string
       - `data.stemMd`（必填）：string
       - `data.options`（可选）：array
@@ -2318,8 +2347,8 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `libraryId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
-| `questionId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `libraryId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
+| `questionId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
 **请求体：** 无。
@@ -2386,7 +2415,7 @@
 `application/json`
 - `scope`（必填）：string；枚举 `SELECTED_LIBRARIES|ALL_MY_LIBRARIES`
 - `libraryIds`（必填）：array；最大项 100
-  - 元素：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+  - 元素：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
 - `mode`（必填）：string；枚举 `MEMORIZE|EXAM`
 - `questionTypes`（必填）：array；最小项 1
   - 元素：string；枚举 `SINGLE_CHOICE|MULTIPLE_CHOICE|JUDGE|FILL_BLANK|ESSAY`
@@ -2400,7 +2429,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.mode`（必填）：string；枚举 `MEMORIZE|EXAM`
       - `data.status`（必填）：string
       - `data.questionCount`（必填）：integer
@@ -2426,7 +2455,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `sessionId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `sessionId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 
 **请求体：** 无。
 
@@ -2437,7 +2466,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.mode`（必填）：string；枚举 `MEMORIZE|EXAM`
       - `data.status`（必填）：string
       - `data.questionCount`（必填）：integer
@@ -2463,7 +2492,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `sessionId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `sessionId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 
 **请求体：** 无。
 
@@ -2477,20 +2506,20 @@
       - `data`：以下互斥变体之一
         - 变体 1
           - `data.mode`（必填）：固定为 `EXAM`
-          - `data.questionSnapshotId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+          - `data.questionSnapshotId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - `data.sequenceNo`（必填）：integer
           - `data.question`（必填）：object
-            - `data.question.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.question.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
             - `data.question.type`（必填）：string
             - `data.question.stemMd`（必填）：string
             - `data.question.options`（可选）：array
               - 元素：object
         - 变体 2
           - `data.mode`（必填）：固定为 `MEMORIZE`
-          - `data.questionSnapshotId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+          - `data.questionSnapshotId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
           - `data.sequenceNo`（必填）：integer
           - `data.question`（必填）：object
-            - `data.question.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+            - `data.question.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
             - `data.question.type`（必填）：string
             - `data.question.stemMd`（必填）：string
             - `data.question.options`（可选）：array
@@ -2526,13 +2555,13 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `sessionId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `sessionId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
 **请求体**
 
 `application/json`
-- `questionSnapshotId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+- `questionSnapshotId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
 - `answer`（必填）：object
   - `answer`：以下互斥变体之一
     - 变体 1
@@ -2568,7 +2597,7 @@
             - `data.correctAnswer.selfAssessment`（必填）：string；枚举 `KNOW|DONT_KNOW`
       - `data.analysisMd`（必填）：string
       - `data.wrongLibrary`（必填）：object
-        - `data.wrongLibrary.libraryId`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+        - `data.wrongLibrary.libraryId`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
         - `data.wrongLibrary.containsQuestion`（必填）：boolean
     - `traceId`（必填）：string
 
@@ -2588,7 +2617,7 @@
 
 | 名称 | 位置 | 必填 | 规则 |
 | --- | --- | --- | --- |
-| `sessionId` | path | 是 | string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$` |
+| `sessionId` | path | 是 | string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$` |
 | `Idempotency-Key` | header | 是 | string；格式 `uuid` |
 
 **请求体：** 无。
@@ -2600,7 +2629,7 @@
     - `code`（必填）：固定为 `0`
     - `message`（必填）：固定为 `OK`
     - `data`（必填）：object
-      - `data.id`（必填）：string；正则 `^[0-9A-HJKMNP-TV-Z]{26}$`
+      - `data.id`（必填）：string；正则 `^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$`
       - `data.mode`（必填）：string；枚举 `MEMORIZE|EXAM`
       - `data.status`（必填）：string
       - `data.questionCount`（必填）：integer

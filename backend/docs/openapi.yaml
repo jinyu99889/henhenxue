@@ -27,14 +27,14 @@ paths:
       summary: Login
       operationId: login
       requestBody: {$ref: '#/components/requestBodies/LoginRequest'}
-      responses: {'200': {$ref: '#/components/responses/Login'}, '401': {$ref: '#/components/responses/Error'}}
+      responses: {'200': {$ref: '#/components/responses/Login'}, '400': {$ref: '#/components/responses/Error'}, '401': {$ref: '#/components/responses/Error'}, '429': {$ref: '#/components/responses/Error'}, '503': {$ref: '#/components/responses/Error'}}
   /auth/email-codes:
     post:
       security: []
       summary: Send email code
       operationId: sendEmailCode
       requestBody: {$ref: '#/components/requestBodies/EmailCodeRequest'}
-      responses: {'202': {$ref: '#/components/responses/Empty'}, '400': {$ref: '#/components/responses/Error'}, '429': {$ref: '#/components/responses/Error'}}
+      responses: {'202': {$ref: '#/components/responses/Empty'}, '400': {$ref: '#/components/responses/Error'}, '409': {$ref: '#/components/responses/Error'}, '429': {$ref: '#/components/responses/Error'}}
   /auth/password-resets:
     post:
       security: []
@@ -498,11 +498,11 @@ components:
   headers:
     ETag: {schema: {type: string, pattern: '^"[1-9][0-9]*"$'}, description: New aggregate version}
   schemas:
-    Ulid: {type: string, pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'}
+    Ulid: {type: string, pattern: '^(?:[0-9]{26}|[0-9A-HJKMNP-TV-Z]{26})$', description: '新 ID 为 26 位十进制雪花 ID；兼容已存在的 26 位 ULID。'}
     Slug: {type: string, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$', maxLength: 128}
     ApiResponse: {type: object, required: [code, message, data, traceId], properties: {code: {const: 0}, message: {const: OK}, data: {}, traceId: {type: string}}}
     ErrorResponse: {type: object, required: [code, message, traceId], properties: {code: {type: string, description: '业务错误码；INTERNAL_ERROR 表示未预期服务端错误，SERVICE_UNAVAILABLE 表示服务暂不可用。'}, message: {type: string}, data: {type: 'null'}, traceId: {type: string}}}
-    RegisterRequest: {type: object, additionalProperties: false, required: [username, email, emailCode, password], properties: {username: {type: string, minLength: 8, maxLength: 64}, email: {type: string, format: email}, emailCode: {type: string, pattern: '^\\d{6}$'}, password: {type: string, minLength: 8, maxLength: 128}}}
+    RegisterRequest: {type: object, additionalProperties: false, required: [username, email, emailCode, password, nickname], properties: {username: {type: string, minLength: 8, maxLength: 64}, email: {type: string, format: email}, emailCode: {type: string, pattern: '^\\d{6}$'}, password: {type: string, minLength: 8, maxLength: 128, pattern: '^(?=.*[A-Za-z])(?=.*\\d).+$'}, nickname: {type: string, minLength: 1, maxLength: 64}}}
     LoginRequest: {type: object, additionalProperties: false, required: [account, password], properties: {account: {type: string, minLength: 1, maxLength: 128}, password: {type: string, minLength: 8, maxLength: 128}}}
     EmailCodeRequest: {type: object, additionalProperties: false, required: [email, purpose], properties: {email: {type: string, format: email}, purpose: {type: string, enum: [REGISTER, PASSWORD_RESET]}}}
     PasswordResetRequest: {type: object, additionalProperties: false, required: [email, emailCode, newPassword], properties: {email: {type: string, format: email}, emailCode: {type: string, pattern: '^\\d{6}$'}, newPassword: {type: string, minLength: 8, maxLength: 128}}}

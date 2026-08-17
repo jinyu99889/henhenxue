@@ -28,7 +28,3 @@ management:
     health:
       probes:
         enabled: true
-
-sa-token:
-  token-name: ${SA_TOKEN_NAME:satoken} # TODO: 与前端、网关统一的令牌名称
-  jwt-secret-key: ${SA_TOKEN_JWT_SECRET:} # TODO: 仅以环境变量注入，生产环境必填
